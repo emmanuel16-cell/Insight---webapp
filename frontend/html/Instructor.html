@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>InSight | Instructors</title>
+    <link rel="icon" type="image/png" href="../src/img/LOGO.png">
+    <link rel="shortcut icon" type="image/x-icon" href="../src/img/LOGO.png">
+    <link rel="stylesheet" href="../vendor/fontawesome/css/all.min.css">
+    <link rel="stylesheet" href="../css/header.css">
+    <script src="../vendor/jsqr/jsQR.min.js"></script>
+    <script src="/static/vision_bundle.js"></script>
+    <script type="module">
+        import * as mpTasksVision from "/frontend/static/vision_bundle.js";
+        window.mpTasksVision = mpTasksVision; // Export to global for page-show.js
+    </script>
+    <link rel="stylesheet" href="../css/side-style.css">
+    <link rel="stylesheet" href="../css/modal.css">
+    <link rel="stylesheet" href="../css/instructor-card/instructor-style.css">
+    <link rel="stylesheet" href="../css/instructor-card/camera-modal.css">
+    <link rel="stylesheet" href="../css/password-toggle.css">
+
+</head>
+<body>
+   
+<!-- ══ SIDENAV ══════════════════════════════════════════════ -->
+<nav class="sidenav" id="sidenav">
+    <div class="navbar-container">
+        <div class="logo">
+            <img class="imgLogo" src="/src/img/LOGO.png" data-hover="/source/img/whitelogo.png" alt="InSight Logo">
+        </div>
+        <ul class="nav-links">
+            <li><a href="#home"        class="active"><i class="fas fa-th-large"></i><span>Overview</span></a></li>
+            <li><a href="#subject">    <i class="fas fa-book"></i><span>Subjects</span></a></li>
+            <li><a href="#student">    <i class="fas fa-user-graduate"></i><span>Students</span></a></li>
+            <li><a href="#analytic">   <i class="fas fa-chart-line"></i><span>Analytics</span></a></li>
+            <li><a href="#report">     <i class="fas fa-file-alt"></i><span>Reports</span></a></li>
+        </ul>
+    </div>
+</nav>
+
+<!-- ══ TOPBAR ═══════════════════════════════════════════════ -->
+<div class="topbar" id="topbar">
+    <h2 id="topbar-name">Dashboard</h2>
+    <div class="user">
+        <img class="user-img" id="topbar-avatar" src="/src/img/profile.png" alt="User">
+        <a class="user-arrow" id="userToggle">
+            <i class="fas fa-chevron-down" id="arrowIcon"></i>
+        </a>
+        <div class="user-dropdown">
+            <a href="#profile" class="nav-to-profile"><i class="fas fa-id-card"></i> Profile</a>
+            <a href="#" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Logout</a>
+        </div>
+    </div>
+</div>
+
+<!-- ══ MAIN CONTENT ═════════════════════════════════════════ -->
+<main class="main-content">
+
+    <!-- ── OVERVIEW ──────────────────────────────────────── -->
+    <section id="home" class="page-section">
+        <div class="column">
+            <div class="row">
+                <div class="notification-card" style="display: none">
+                    <div class="half-row">
+                        <span><i class="fas fa-chart-line"></i></span>
+                        <div class="notification-column">
+                            <h3>Warning</h3>
+                            <p>8 students in Subject-name are below 75% attendance threshold. Immediate intervention recommended.</p>
+                        </div>
+                    </div>
+                    <div class="half-row end"><button>View Details</button></div>
+                </div>
+            </div>
+            <div class="column">
+                <div class="row">
+                    <div class="row">
+                        <div class="small-card" style="background:#2EC4B6">
+                            <div class="row"><div class="small-card-icon"><span><i class="fas fa-book"></i></span></div>
+                                <div class="column"><div class="row"><span>Subjects</span></div><div class="row"><div class="small-card-number"><span id="stat-all-subjects">0</span></div></div></div></div>
+
+                            </div>
+                        <div class="small-card" style="background:#219EBC">
+                            <div class="row"><div class="small-card-icon"><span><i class="fas fa-user-graduate"></i></span></div>
+                                <div class="column"><div class="row"><span>Students</span></div><div class="row"><div class="small-card-number"><span id="stat-all-students">0</span></div></div></div></div>
+                        </div>
+                        <div class="small-card" style="background:#FB8500">
+                            <div class="row"><div class="small-card-icon"><span><i class="fas fa-chalkboard"></i></span></div>
+                                <div class="column"><div class="row"><span>Violators</span></div><div class="row"><div class="small-card-number"><span id="stat-avg-attendance">0%</span></div></div></div></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="medium-card">
+                    <div class="analytics-header">
+                        <div class="analytics-title row space-between">
+                            <h2>Attendance</h2>
+                            <select id="attendance-filter" class="filter-dropdown" style="font-size:14px;padding:4px 8px;">
+                                <option value="today">Today</option>
+                                <option value="weekly">Weekly</option>
+                                <option value="monthly">Monthly</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="donut-row">
+                        <div class="donut-label"><div class="donut-column"><span class="donut-enter">Present</span><span class="donut-exit">Late</span><span class="donut-absent">Absent</span></div></div>
+                        <div class="chart-wrapper"><div class="chart-container"><canvas id="gateChart" height="180"></canvas></div></div>
+                    </div>
+                    <div class="donut-row">
+                        <div class="donut-label" style="border:transparent;"></div>
+                        <div class="chart-wrapper" style="border:transparent;"><div class="chart-center"><h2 id="stat-donut-total-students">0</h2><span>TOTAL</span></div></div>
+                    </div>
+                </div>
+                <div class="medium-card">
+                    <div class="analytics-header"><div class="analytics-title row"><h2>Section Comparison</h2></div></div>
+                    <div class="section-comparison">
+                        <div class="column" id="section-comparison-container">
+                            <!-- Section comparison bars loaded via JS -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="large-card">
+
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ── SUBJECTS ───────────────────────────────────────── -->
+    <section id="subject" class="page-section" style="display:none;">
+        <div class="full-subject-container">
+            <div class="subject-container">
+                <button class="new-subject" id="add-subject-btn">+ New Subject</button>
+                <div class="subject-list" id="instructor-subject-list">
+                    <!-- Subject cards loaded via JS -->
+                </div>
+                <button style="display: none" class="subject-archive" id="view-archive-subject">View Archive</button>
+            </div>
+            <div class="session-container" id="sessionListPanel">
+                <div class="session-header">
+                    <div class="session-title half-row"><h2>Sessions</h2></div>
+                    <div class="half-row end">
+                        <div class="search">
+                            <label>Search:</label>
+                            <input type="text" placeholder="Type to filter...">
+                            <button class="add-session" id="add-session-btn" style="display:none;">+ New Session</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="session-table-container">
+                    <table>
+                        <thead><tr><th>Date</th><th>Start Time</th><th>End Time</th><th>Section</th><th>Present/Total</th><th>Status</th><th>Action</th></tr></thead>
+                        <tbody>
+
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ── VIEW SESSION ───────────────────────────────────── -->
+    <section id="view-session" class="page-section" style="display:none;">
+        <div class="full-card">
+            <div class="view-session-container">
+                <div class="session-header">
+                    <div class="session-title half-row">
+                        <button class="back-button" onclick="showSection('#subject')">
+                            <i class="fas fa-arrow-left"></i> Back
+                        </button>
+                        <h2 style="margin-left: 15px;">SE101 — Jan 27, 2026 | BSCS-3B</h2>
+                    </div>
+                    <div class="half-row end">
+                        <div class="search"><label>Search:</label><input type="text" placeholder="Type to filter..."></div>
+                    </div>
+                </div>
+                <div class="view-session-table-container">
+                    <table>
+                        <thead>
+                        <tr>
+                            <th>Time</th>
+                            <th>Student ID</th>
+                            <th>Name</th>
+                            <th>Status</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr>
+                            <td>8:00am</td><td>STDNT-112-21</td><td>Caesar Morales</td>
+                            <td class="table-center"><span class="status in-progress">Absent</span></td>
+                        </tr>
+                        <tr>
+                            <td>10:00am</td><td>STDNT-113-21</td><td>Caesar Vance</td>
+                            <td class="table-center"><span class="status completed">Present</span></td>
+                        </tr>
+                        <tr>
+                            <td>—</td><td>STDNT-234-21</td><td>Gloria Little</td>
+                            <td class="table-center"><span class="status scheduled">Pending</span></td>
+                        </tr>
+                        </tbody>
+
+                    </table>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ── STUDENTS ───────────────────────────────────────── -->
+    <section id="student" class="page-section" style="display:none;">
+        <div class="full-subject-container">
+            <div class="subject-container" id="student-subject-list">
+                <!-- Subject cards loaded via JS -->
+            </div>
+            <div class="session-container" id="studentListPanel">
+                <div class="table-controls-container">
+                    <div class="table-header main-header">
+                        <div class="row-title">
+                            <button class="header-button active" id="enrolledBtn">Enrolled</button>
+                            <button class="header-button" id="newStudentBtn">New Student</button>
+                        </div>
+                        <div class="half-row end"><div class="search"><label>Search:</label><input type="text" placeholder="Type to filter..."></div></div>
+                    </div>
+                </div>
+                <div class="table-container" id="enrolledTable">
+                    <table id="EnrolledStudent">
+                        <thead><tr><th>ID No.</th><th>Student Name</th><th>Section</th><th>Attendance</th><th>Action</th></tr></thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+                <div class="table-container" id="newStudentTable" style="display:none;">
+
+                    <table id="NewStudent">
+                        <thead>
+                            <tr>
+                                <th>Student ID No.</th>
+                                <th>Section</th>
+                                <th>Name</th>
+                                <th>Applied At</th>
+                                <th>Status</th>
+                                <th class="action-header">Action <button class="table-button edit" id="acceptAllBtn" style="margin-left: auto;">Accept All</button>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ── ANALYTICS ─────────────────────────────────────── -->
+    <section id="analytic" class="page-section" style="display:none;">
+        <div class="full-card">
+            <div class="table-header main-header">
+                <div class="title margin-bottoms">My Subjects</div>
+                <button class="add-button edit" id="openEnrollModalBtn" style="background:#219EBC; color:white; border:none; padding:8px 16px; border-radius:6px; cursor:pointer;">+ Enroll Subject</button>
+            </div>
+            <div class="row wrap" id="subject-card-list">
+                <!-- Subject cards loaded via JS -->
+            </div>
+        </div>
+    </section>
+
+    <!-- ── REPORTS ────────────────────────────────────────── -->
+    <section id="report" class="page-section" style="display:none;">
+        <div class="full-card">
+            <div class="table-header main-header"><div class="title margin-bottoms">Export Reports</div></div>
+            <div class="center wrap">
+                <div class="report-card" style="border-color:#FF4D4D"><div class="report-header"><div class="row"><span class="report-status" style="color:#fa2424;background:#FFEBEB"><i class="fas fa-file-pdf"></i></span></div><h2>Monthly Report (PDF)</h2><span class="report-detail">Detailed attendance report with statistics</span></div><div class="report-column"><button class="report-button" id="download-monthly-pdf" style="color:#fa2424;background:#FFEBEB">Download PDF</button></div></div>
+                <div class="report-card" style="border-color:#2ECC71"><div class="report-header"><div class="row"><span class="report-status" style="color:#27AE60;background:#EAFAF1"><i class="fas fa-file-csv"></i></span></div><h2>Attendance Data (CSV)</h2><span class="report-detail">Raw attendance data in CSV format</span></div><div class="report-column"><button class="report-button" id="download-attendance-csv" style="color:#27AE60;background:#EAFAF1">Download CSV</button></div></div>
+                <div class="report-card" style="border-color:#219EBC"><div class="report-header"><div class="row"><span class="report-status" style="color:#1A7E96;background:#E9F6F9"><i class="fas fa-print"></i></span></div><h2>Print Summary</h2><span class="report-detail">Printable attendance summary card</span></div><div class="report-column"><button class="report-button" id="print-attendance-summary" style="color:#15667a;background:#E9F6F9">Print Summary</button></div></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ── PROFILE ────────────────────────────────────────── -->
+    <section id="profile" class="page-section profile-page" style="display:none;">
+        <div class="profile-card" id="view-profile-card">
+            <div class="profile-banner">
+                <div class="banner-avatar-wrap"><img class="banner-avatar" id="view-avatar" src="/src/img/profile.png" alt="Avatar"></div>
+            </div>
+            <div class="profile-identity"><h2 class="profile-name" id="view-fullname">Mr. First Last</h2><p class="profile-course" id="view-course">Instructor — Computer Science Dept.</p></div>
+            <div class="profile-divider"></div>
+            <div class="profile-meta-grid">
+                <div class="profile-meta-item"><span class="meta-label">Employee ID</span><span class="meta-value" id="view-stdid">FCLTY-000</span></div>
+                <div class="profile-meta-item"><span class="meta-label">Department</span><span class="meta-value" id="view-depart">BSCS</span></div>
+                <div class="profile-meta-item"><span class="meta-label">Role</span><span class="meta-value" id="view-role">—</span></div>
+            </div>
+            <div class="profile-divider"></div>
+            <div class="profile-two-col">
+                <div class="profile-block" style="display: none">
+                    <h4 class="profile-block-title">Subjects Handled</h4>
+                    <div class="profile-pills" id="view-subjects"><div class="profile-pill">SE101</div><div class="profile-pill">WD202</div></div>
+                </div>
+                <div class="profile-block">
+                    <h4 class="profile-block-title">Account Details</h4>
+                    <div class="profile-info-grid">
+                        <div class="profile-info-item"><span class="meta-label">Gender</span><span class="meta-value" id="view-gender">—</span></div>
+                        <div class="profile-info-item"><span class="meta-label">Contact</span><span class="meta-value" id="view-contact">—</span></div>
+                        <div class="profile-info-item"><span class="meta-label">Email</span><span class="meta-value" id="view-email">—</span></div>
+                    </div>
+                </div>
+            </div>
+            <div class="profile-actions">
+                <button class="save-button" id="editBtn"><i class="fas fa-pen"></i> Edit Profile</button>
+                <button class="save-button" id="update-password-btn" style="margin-left:auto;background:#219EBC;color:#fff;"><i class="fas fa-key"></i> Update Password</button>
+            </div>
+        </div>
+        <div class="profile-card" id="edit-profile-card" style="display:none;">
+            <div class="profile-banner edit-banner">
+                <div class="banner-avatar-wrap"><img class="banner-avatar" id="edit-avatar-preview" src="/src/img/profile.png" alt="Avatar"><label class="avatar-edit-btn" for="imgInput"><i class="fas fa-camera"></i></label><input type="file" id="imgInput" accept="image/*" style="display:none;"></div>
+                <div class="banner-edit-title"><span class="banner-edit-label">Editing Profile</span></div>
+            </div>
+            <div class="edit-section-title">Personal Information</div>
+            <div class="edit-grid">
+                <div class="edit-field"><label class="edit-label">First Name</label><input type="text" id="firstname" class="textbox" placeholder="First Name" autocomplete="off"></div>
+                <div class="edit-field"><label class="edit-label">Last Name</label><input type="text" id="lastname" class="textbox" placeholder="Last Name" autocomplete="off"></div>
+                <div class="edit-field"><label class="edit-label">Gender</label><select id="gender" class="textbox combo-box"><option value="" disabled selected>Select Gender</option><option value="Male">Male</option><option value="Female">Female</option></select></div>
+                <div class="edit-field"><label class="edit-label">Department</label><select id="depart" class="textbox combo-box"><option value="" disabled selected>Select Department</option><option value="BSCS">BSCS</option><option value="BSED">BSED</option><option value="BEED">BEED</option><option value="BSHM">BSHM</option><option value="ACT">ACT</option></select></div>
+                <div class="edit-field"><label class="edit-label">Contact</label><input type="number" id="contact" class="textbox" placeholder="09XX-XXX-XXXX" autocomplete="off"></div>
+            </div>
+            <div class="profile-actions">
+                <button class="save-button" id="saveBtn"><i class="fas fa-save"></i> Save Changes</button>
+                <button class="cancel-button" id="cancelBtn"><i class="fas fa-times"></i> Cancel</button>
+            </div>
+        </div>
+    </section>
+
+</main>
+<!-- ── PASSWORD UPDATE MODAL ──────────────────────────────── -->
+<div class="add-account" id="password-modal" style="display: none">
+    <div class="add-account-overlay" id="passwordOverlay">
+        <div class="add-account-modal">
+            <div class="aa-header">
+                <div class="aa-header-left">
+                    <div class="aa-header-icon"><i class="fas fa-key"></i></div>
+                    <div>
+                        <h3>Update Password</h3>
+                        <span>Provide your current password to continue</span>
+                    </div>
+                </div>
+                <button class="aa-close" id="closePasswordModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="aa-body">
+                <div class="aa-grid" style="margin-top:20px;">
+                    <div class="aa-field aa-field-full">
+                        <label class="aa-label">Current Password <span class="aa-required">*</span></label>
+                        <div class="password-input-wrapper">
+                            <input type="password" id="current-password" class="aa-input" placeholder="Enter current password" required>
+                            <span class="password-toggle-icon"><i class="fas fa-eye"></i></span>
+                        </div>
+                    </div>
+                    <div class="aa-field aa-field-full" style="margin-top:15px;">
+                        <label class="aa-label">New Password <span class="aa-required">*</span></label>
+                        <div class="password-input-wrapper">
+                            <input type="password" id="new-password" class="aa-input" placeholder="Enter new password" required>
+                            <span class="password-toggle-icon"><i class="fas fa-eye"></i></span>
+                        </div>
+                    </div>
+                    <div class="aa-field aa-field-full" style="margin-top:15px;">
+                        <label class="aa-label">Confirm New Password <span class="aa-required">*</span></label>
+                        <div class="password-input-wrapper">
+                            <input type="password" id="confirm-new-password" class="aa-input" placeholder="Confirm new password" required>
+                            <span class="password-toggle-icon"><i class="fas fa-eye"></i></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="aa-message" id="passwordMessage" style="display:none;"></div>
+            </div>
+            <div class="aa-footer">
+                <button class="aa-btn-cancel" id="passwordCancel">
+                    <i class="fas fa-times"></i> Cancel
+                </button>
+                <button class="aa-btn-submit" id="passwordSubmit">
+                    <i class="fas fa-save"></i>
+                    <span>Update Password</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ── ADD SUBJECT MODAL ────────────────────────────────── -->
+<div class="add-account" id="add-subject-modal" style="display: none">
+    <div class="add-account-overlay" id="addSubjectOverlay">
+        <div class="add-subject-modals">
+            <div class="aa-header">
+                <div class="aa-header-left">
+                    <div class="aa-header-icon"><i class="fas fa-book"></i></div>
+                    <div>
+                        <h3>Create New Subject</h3>
+                        <span>Define a new subject for your students</span>
+                    </div>
+                </div>
+                <button class="aa-close" id="closeAddSubject">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="aa-body">
+                <div class="aa-grid" style="margin-top:20px;">
+                    <div class="aa-field aa-field-full">
+                        <label class="aa-label">Subject ID / Code <span class="aa-required">*</span></label>
+                        <input type="text" id="subjectCode" class="aa-input" placeholder="e.g. CS101" required>
+                    </div>
+                    <div class="aa-field aa-field-full" style="margin-top:15px;">
+                        <label class="aa-label">Subject Name <span class="aa-required">*</span></label>
+                        <input type="text" id="subjectName" class="aa-input" placeholder="e.g. Introduction to Programming" required>
+                    </div>
+                </div>
+                
+                <!-- Code display (hidden initially) -->
+                <div id="generatedCodeContainer" style="display:none; margin-top:20px; padding:15px; background:#f0f9ff; border:1px dashed #0284c7; border-radius:10px; text-align:center;">
+                    <span style="font-size:0.8rem; color:#0369a1; text-transform:uppercase; font-weight:700;">Join Code for Students</span>
+                    <h2 id="displayJoinCode" style="margin:5px 0; color:#023047; letter-spacing:2px; font-family:monospace;">—</h2>
+                    <p style="font-size:0.75rem; color:#64748b; margin:0;">Students need this code to enroll in your class.</p>
+                </div>
+
+                <!-- Schedule Settings -->
+                <div style="margin-top:25px; padding-top:20px; border-top:1px solid #e5e7eb;">
+                    <div style="font-size:0.9rem; font-weight:600; color:#1f2937; display:flex; align-items:center; gap:8px; margin-bottom:15px;">
+                        <i class="fas fa-clock"></i> 
+                        <span>Schedule & Time Window</span>
+                    </div>
+
+                    <div class="aa-grid">
+                        <div class="aa-field">
+                            <label class="aa-label">Start Time <span class="aa-required">*</span></label>
+                            <input type="time" id="subjectScheduleStart" class="aa-input" required>
+                        </div>
+                        <div class="aa-field">
+                            <label class="aa-label">End Time <span class="aa-required">*</span></label>
+                            <input type="time" id="subjectScheduleEnd" class="aa-input" required>
+                        </div>
+                    </div>
+                    
+                    <div class="aa-field aa-field-full" style="margin-top:15px;">
+                        <label class="aa-label">Attendance Time Window (Minutes) <span class="aa-required">*</span></label>
+                        <input type="number" id="subjectTimeWindow" class="aa-input" value="30" min="5" max="240" required>
+                        <small style="color:#6b7280; display:block; margin-top:5px;">Students can check in within this many minutes before/after the start time.</small>
+                    </div>
+                </div>
+
+                <div class="aa-message" id="subjectMessage" style="display:none;"></div>
+            </div>
+            <div class="aa-footer">
+                <button class="aa-btn-cancel" id="subjectCancel">
+                    <i class="fas fa-times"></i> Cancel
+                </button>
+                <button class="aa-btn-submit" id="subjectSubmit">
+                    <i class="fas fa-plus"></i>
+                    <span>Create Subject</span>
+                </button>
+                <button class="aa-btn-submit" id="subjectDone" style="display:none; background:#2EC4B6;">
+                    <i class="fas fa-check"></i>
+                    <span>Done</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="/js/logout.js"></script>
+<script src="/js/page-show.js"></script>
+<script src="/js/chart.js"></script>
+<script src="/frontend/vendor/xlsx.full.min.js"></script>
+<script src="/js/instructor/instructor.js"></script>
+<script src="/js/chart-instructor.js"></script>
+<script src="/js/password-toggle.js"></script>
+
+</body>
+</html>

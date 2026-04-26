@@ -1,0 +1,67 @@
+# InSight – Python dependencies
+# Python 3.11 or 3.12 required
+#
+# Install options:
+#
+# Option A – virtual environment (recommended):
+#   python3 -m venv venv
+#   source venv/bin/activate          # Windows: venv\Scripts\activate
+#   pip install -r requirements.txt
+#
+# Option B – system-wide (Linux/macOS, if no venv):
+#   pip install -r requirements.txt --break-system-packages
+
+# ── Web framework ──────────────────────────────────────────
+fastapi>=0.111.0
+uvicorn[standard]>=0.29.0
+python-multipart>=0.0.9
+
+# ── Config & env ──────────────────────────────────────────
+python-dotenv>=1.0.1
+
+# ── Database ───────────────────────────────────────────────
+mysql-connector-python>=8.4.0
+
+# ── Encryption ─────────────────────────────────────────────
+cryptography>=42.0.8
+
+# ── Data validation ────────────────────────────────────────
+pydantic>=2.7.1
+
+# ── Numeric / CV ───────────────────────────────────────────
+# numpy 2.x is fine for Python 3.12; 1.x also works
+numpy>=1.26.4
+
+# Use opencv-python-headless on servers (no GUI window support needed)
+# If you already have opencv-contrib-python installed, skip this line
+opencv-python-headless>=4.9.0.80
+
+# ── YOLO detection ─────────────────────────────────────────
+# ultralytics brings in torch/torchvision automatically
+# Install separately if torch install fails (see note below):
+ultralytics>=8.2.0
+
+# ── Face detection / liveness ──────────────────────────────
+# mediapipe 0.10.14 has no wheel for Python 3.12.
+# Use 0.10.18+ which added 3.12 support.
+mediapipe>=0.10.18
+
+# ── Face recognition / embeddings ─────────────────────────
+# InsightFace with MobileFaceNet for face detection & recognition (modern, maintained)
+# Replaces deprecated face-recognition library
+insightface>=0.7.3
+# Required dependency for InsightFace (choose CPU or GPU version)
+onnxruntime>=1.16.0
+# If you have an NVIDIA GPU with CUDA, install onnxruntime-gpu instead:
+# onnxruntime-gpu>=1.16.0
+
+# ── QR Code generation ────────────────────────────────────
+# Generates QR codes for student authentication
+qrcode[pil]>=7.4.2
+
+# ── Email ──────────────────────────────────────────────────
+# For OTP and password reset emails (already in stdlib, but explicit)
+# python-email-validator for email validation in Pydantic
+
+# ── Message queue / Background workers ----------------------
+aio-pika>=8.2.0

@@ -1,0 +1,272 @@
+/* ══════════════════════════════════════════════════════════
+   modal.res  –  Shared Modal Styles (InSight)
+   Used for: Add Account, Update Password, Add Dept, etc.
+   ══════════════════════════════════════════════════════════ */
+
+/* ── Host overlay ───────────────────────────────────────── */
+.add-account {
+    position: fixed;
+    inset: 0;
+    z-index: 10000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    background: rgba(2, 48, 71, 0.55);
+}
+
+/* ── Centering wrapper ──────────────────────────────────── */
+.add-account-overlay {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* ── Modal box — compact since form is minimal ──────────── */
+.add-account-modal {
+    width: 480px;
+    max-width: 96vw;
+    background: #ffffff;
+    border-radius: 20px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    box-shadow: 0 24px 70px rgba(2, 48, 71, 0.32);
+    animation: aa-pop-in 0.22s cubic-bezier(0.34, 1.38, 0.64, 1);
+}
+.add-subject-modals {
+    width: 700px;
+    max-width: 96vw;
+    background: #ffffff;
+    border-radius: 20px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    box-shadow: 0 24px 70px rgba(2, 48, 71, 0.32);
+    animation: aa-pop-in 0.22s cubic-bezier(0.34, 1.38, 0.64, 1);
+}
+
+@keyframes aa-pop-in {
+    from { transform: scale(0.92) translateY(16px); opacity: 0; }
+    to   { transform: scale(1)    translateY(0);    opacity: 1; }
+}
+
+/* ── Header ─────────────────────────────────────────────── */
+.aa-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 15px;
+    background: #023047;
+    flex-shrink: 0;
+}
+.aa-header-left {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+.aa-header-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    background: rgba(46,196,182,0.18);
+    border: 1px solid rgba(46,196,182,0.35);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #2EC4B6;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+}
+.aa-header h3    { margin: 0; font-size: 1rem; font-weight: 800; color: #ffffff; }
+.aa-header span  { font-size: 0.72rem; color: #8ecae6; font-weight: 500; }
+.aa-close {
+    background: none;
+    border: none;
+    color: #8ecae6;
+    font-size: 1.1rem;
+    cursor: pointer;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s, color 0.2s;
+}
+.aa-close:hover { background: #FB8500; color: #fff; }
+
+/* ── Role tabs ──────────────────────────────────────────── */
+.aa-role-tabs {
+    display: flex;
+    background: #f8f9fa;
+    border-bottom: 2px solid #e5e7eb;
+    flex-shrink: 0;
+    padding: 10px 24px 0;
+}
+.aa-role-tab {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 9px 20px;
+    border: none;
+    background: transparent;
+    color: #6b7280;
+    font-size: 0.85rem;
+    font-weight: 700;
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    margin-bottom: -2px;
+    border-radius: 8px 8px 0 0;
+    font-family: inherit;
+    transition: color 0.2s, border-color 0.2s;
+}
+.aa-role-tab i { font-size: 0.95rem; }
+.aa-role-tab:hover { color: #023047; }
+.aa-role-tab.active {
+    color: #023047;
+    border-bottom-color: #FFB703;
+    background: #fff;
+}
+
+/* ── Body ───────────────────────────────────────────────── */
+.aa-body {
+    padding: 24px 24px 16px;
+    overflow-y: auto;
+    max-height: calc(85vh - 120px);
+    flex: 1;
+    min-height: 0;
+}
+
+/* ── Temp password notice ───────────────────────────────── */
+.aa-temp-pass-notice {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 14px 16px;
+    background: linear-gradient(135deg, rgba(46,196,182,0.08), rgba(33,158,188,0.06));
+    border: 1px solid rgba(46,196,182,0.3);
+    border-left: 4px solid #2EC4B6;
+    border-radius: 12px;
+}
+.aa-notice-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: rgba(46,196,182,0.15);
+    border: 1px solid rgba(46,196,182,0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #2EC4B6;
+    font-size: 0.95rem;
+    flex-shrink: 0;
+}
+.aa-notice-text          { display: flex; flex-direction: column; gap: 3px; }
+.aa-notice-text strong   { font-size: 0.82rem; font-weight: 800; color: #023047; }
+.aa-notice-text span     { font-size: 0.72rem; color: #6b7280; font-weight: 500; line-height: 1.5; }
+
+/* ── Form grid ──────────────────────────────────────────── */
+.aa-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px 20px;
+}
+.aa-field      { display: flex; flex-direction: column; gap: 5px; }
+.aa-field-full { grid-column: 1 / -1; }
+.aa-label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+}
+.aa-required { color: #FB8500; }
+
+/* ── Input ──────────────────────────────────────────────── */
+.aa-input {
+    width: 100%;
+    background: #f8f9fa;
+    border: 1.5px solid #e5e7eb;
+    border-radius: 9px;
+    padding: 10px 14px;
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: #023047;
+    outline: none;
+    font-family: inherit;
+    box-sizing: border-box;
+    transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+}
+.aa-input:focus {
+    border-color: #2EC4B6;
+    background: #ffffff;
+    box-shadow: 0 0 0 3px rgba(46,196,182,0.12);
+}
+.aa-input.error {
+    border-color: #FB8500;
+    box-shadow: 0 0 0 3px rgba(251,133,0,0.12);
+}
+.aa-input::placeholder { color: #c4c9d4; font-weight: 400; }
+
+/* ── Message banner ─────────────────────────────────────── */
+.aa-message {
+    margin-top: 14px;
+    padding: 10px 14px;
+    border-radius: 10px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.aa-message.success { background: #dcfce7; color: #16a34a; border: 1px solid #a7f3d0; }
+.aa-message.error   { background: #ffedd5; color: #c2410c; border: 1px solid #fed7aa; }
+
+/* ── Footer ─────────────────────────────────────────────── */
+.aa-footer {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+    padding: 14px 24px 18px;
+    border-top: 1px solid #e5e7eb;
+    background: #fafafa;
+    flex-shrink: 0;
+}
+.aa-btn-cancel {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 9px 18px;
+    border-radius: 10px;
+    border: 1.5px solid #e5e7eb;
+    background: #f3f4f6;
+    color: #023047;
+    font-size: 0.85rem;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: inherit;
+    transition: background 0.2s, color 0.2s;
+}
+.aa-btn-cancel:hover { background: #e5e7eb; color: #023047; }
+.aa-btn-submit {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 9px 22px;
+    border-radius: 10px;
+    border: none;
+    background: #FFB703;
+    color: #023047;
+    font-size: 0.88rem;
+    font-weight: 800;
+    cursor: pointer;
+    font-family: inherit;
+    transition: background 0.2s, transform 0.1s, box-shadow 0.2s;
+    box-shadow: 0 2px 8px rgba(255,183,3,0.3);
+}
+.aa-btn-submit:hover  { background: #FB8500; box-shadow: 0 4px 14px rgba(251,133,0,0.35); }
+.aa-btn-submit:active { transform: scale(0.97); }
+.aa-btn-submit.loading { opacity: 0.7; pointer-events: none; }

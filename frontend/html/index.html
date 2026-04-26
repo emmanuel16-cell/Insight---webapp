@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>InSight | Login</title>
+    <link rel="icon" type="image/png" href="../src/img/LOGO.png">
+    <link rel="shortcut icon" type="image/x-icon" href="../src/img/LOGO.png">
+    <link rel="stylesheet" href="../vendor/fontawesome/css/all.min.css">
+    <link rel="stylesheet" href="../css/login.css">
+    <link rel="stylesheet" href="../css/password-toggle.css">
+</head>
+<body>
+<main class="main-content">
+    <div class="login-card" id="login-card">
+
+        <!-- ── LOGIN ── -->
+        <section id="login-form" class="form active">
+            <form class="input-form" data-form="login">
+                <h2>Nice to see<br>you again</h2>
+                <div class="form-group">
+                    <label for="login-gmail">Gmail</label>
+                    <input type="email" id="login-gmail" placeholder="Enter your Gmail" required>
+                </div>
+                <div class="form-group">
+                    <label for="login-password">Password</label>
+                    <div class="password-input-wrapper">
+                        <input type="password" id="login-password" placeholder="Enter your password" required>
+                        <span class="password-toggle-icon"><i class="fas fa-eye"></i></span>
+                    </div>
+                    <div class="link-row right">
+                        <a href="#" data-show="forgot-form">Forgot password?</a>
+                    </div>
+                </div>
+                <button type="submit" class="primary-btn">Login</button>
+                <button
+                    type="button"
+                    class="primary-btn"
+                    style="margin-top:8px; background:#2EC4B6;"
+                    onclick="window.location.href='/security.html'">
+                    Open Security Staff Page
+                </button>
+                <div class="link-row center">
+                    <span>Don't have an account?</span>
+                    <a href="/student" data-show="register-form" data-bg="light">Register now</a>
+                </div>
+            </form>
+            <div class="form-details">
+                <img class="imgLogo" src="/src/img/whitelogo.png" alt="InSight">
+                <p>Empowering insight through intelligent detection. Sign in to access your dashboard.</p>
+            </div>
+        </section>
+
+        <!-- ── REGISTER ── -->
+        <section id="register-form" class="form" style="display:none">
+            <div class="form-details side-light">
+                <img class="imgLogo" src="/src/img/whitelogo.png" alt="InSight">
+                <p>Join the InSight platform and unlock powerful real-time detection tools.</p>
+            </div>
+            <form class="input-form rounded-right" data-form="register">
+                <h2>Be <br>one of us</h2>
+                <div class="form-group">
+                    <label for="register-gmail">Gmail</label>
+                    <input type="email" id="register-gmail" placeholder="Enter your Gmail" required>
+                </div>
+                <div class="form-group">
+                    <label for="register-password">Password</label>
+                    <div class="password-input-wrapper">
+                        <input type="password" id="register-password" placeholder="Create a password" required>
+                        <span class="password-toggle-icon"><i class="fas fa-eye"></i></span>
+                    </div>
+                    <label for="register-re-password" style="margin-top:8px">Re-enter Password</label>
+                    <div class="password-input-wrapper">
+                        <input type="password" id="register-re-password" placeholder="Confirm your password" required>
+                        <span class="password-toggle-icon"><i class="fas fa-eye"></i></span>
+                    </div>
+                </div>
+                <button type="submit" class="primary-btn" id="confirm">Submit</button>
+                <div class="link-row center">
+                    <span>Already have an account?</span>
+                    <a href="#" data-show="login-form" data-bg="dark">Login now</a>
+                </div>
+            </form>
+        </section>
+
+        <!-- ── FORGOT PASSWORD – enter email ── -->
+        <section id="forgot-form" class="form" style="display:none">
+            <form class="input-form rounded-left centered" data-form="forgot">
+                <h2>Reset<br>Password</h2>
+                <div class="envelope-icon">
+                    <svg width="120" height="100" viewBox="0 0 72 72" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect x="8" y="20" width="56" height="38" rx="4" stroke="url(#g1)" stroke-width="2.5" fill="none"/>
+                        <path d="M8 24l28 20 28-20" stroke="url(#g1)" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+                        <circle cx="54" cy="20" r="8" fill="none" stroke="#8b5cf6" stroke-width="2.5"/>
+                        <circle cx="54" cy="20" r="3.5" fill="#8b5cf6"/>
+                        <defs>
+                            <linearGradient id="g1" x1="8" y1="20" x2="64" y2="58" gradientUnits="userSpaceOnUse">
+                                <stop stop-color="#f472b6"/><stop offset="1" stop-color="#fb923c"/>
+                            </linearGradient>
+                        </defs>
+                    </svg>
+                </div>
+                <p class="sub-label">Enter your email to receive a reset code.</p>
+                <div class="form-group" style="width:85%">
+                    <label for="forgot-email">Email address</label>
+                    <input type="email" id="forgot-email" class="forgot-input" placeholder="user@gmail.com" required>
+                </div>
+                <button id="forgot-confirm" type="submit" class="primary-btn">Continue</button>
+                <div class="link-row center">
+                    <a href="#" data-show="login-form" data-bg="dark">← Back to login</a>
+                </div>
+            </form>
+            <div class="form-details">
+                <img class="imgLogo" src="/src/img/whitelogo.png" alt="InSight">
+                <p>We'll send a 5-digit verification code to your inbox so you can reset your password safely.</p>
+            </div>
+        </section>
+
+        <!-- ── FORGOT PASSWORD – OTP ── -->
+        <section id="forgot-confirmation-form" class="form" style="display:none">
+            <form class="input-form rounded-left centered" data-form="forgot-otp">
+                <h2>Check <br>your inbox</h2>
+                <div class="envelope-icon">
+                    <svg width="120" height="100" viewBox="0 0 72 72" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect x="8" y="20" width="56" height="38" rx="4" stroke="url(#g2)" stroke-width="2.5" fill="none"/>
+                        <path d="M8 24l28 20 28-20" stroke="url(#g2)" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+                        <circle cx="54" cy="20" r="8" fill="none" stroke="#8b5cf6" stroke-width="2.5"/>
+                        <circle cx="54" cy="20" r="3.5" fill="#8b5cf6"/>
+                        <defs>
+                            <linearGradient id="g2" x1="8" y1="20" x2="64" y2="58" gradientUnits="userSpaceOnUse">
+                                <stop stop-color="#f472b6"/><stop offset="1" stop-color="#fb923c"/>
+                            </linearGradient>
+                        </defs>
+                    </svg>
+                </div>
+                <p class="sub-label">We sent the code to</p>
+                <p class="email-display" id="forgot-otp-email">user@gmail.com</p>
+                <div class="otp-row">
+                    <input class="otp-box" type="text" maxlength="1" inputmode="numeric" pattern="[0-9]">
+                    <input class="otp-box" type="text" maxlength="1" inputmode="numeric" pattern="[0-9]">
+                    <input class="otp-box" type="text" maxlength="1" inputmode="numeric" pattern="[0-9]">
+                    <input class="otp-box" type="text" maxlength="1" inputmode="numeric" pattern="[0-9]">
+                    <input class="otp-box" type="text" maxlength="1" inputmode="numeric" pattern="[0-9]">
+                </div>
+                <button type="submit" class="primary-btn" id="forgot-otp-proceed">Continue</button>
+                <div class="link-row center">
+                    <span>Didn't receive a code?</span>
+                    <a href="#" class="resend-link" data-timer="forgot-timer">Resend Code</a>
+                </div>
+                <p class="resend-timer" id="forgot-timer" style="display:none">
+                    Resend in <span class="timer-count">30</span>s
+                </p>
+            </form>
+            <div class="form-details">
+                <img class="imgLogo" src="/src/img/whitelogo.png" alt="InSight">
+                <p>Enter the 5-digit code we sent to your email to verify your identity.</p>
+            </div>
+        </section>
+
+        <!-- ── REGISTER – OTP confirmation ── -->
+        <section id="confirmation-form" class="form" style="display:none">
+            <div class="form-details side-light">
+                <img class="imgLogo" src="/src/img/whitelogo.png" alt="InSight">
+                <p>Enter the 5-digit code we sent to your email to confirm your new account.</p>
+            </div>
+            <form class="input-form rounded-right centered" id="otp-form" data-form="register-otp">
+                <h2>Verify<br>your email</h2>
+                <div class="envelope-icon">
+                    <svg width="120" height="100" viewBox="0 0 72 72" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect x="8" y="20" width="56" height="38" rx="4" stroke="url(#g3)" stroke-width="2.5" fill="none"/>
+                        <path d="M8 24l28 20 28-20" stroke="url(#g3)" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+                        <circle cx="54" cy="20" r="8" fill="none" stroke="#8b5cf6" stroke-width="2.5"/>
+                        <circle cx="54" cy="20" r="3.5" fill="#8b5cf6"/>
+                        <defs>
+                            <linearGradient id="g3" x1="8" y1="20" x2="64" y2="58" gradientUnits="userSpaceOnUse">
+                                <stop stop-color="#f472b6"/><stop offset="1" stop-color="#fb923c"/>
+                            </linearGradient>
+                        </defs>
+                    </svg>
+                </div>
+                <p class="sub-label">We sent the code to</p>
+                <p class="email-display" id="otp-email-display">user@gmail.com</p>
+                <div class="otp-row">
+                    <input class="otp-box" type="text" maxlength="1" inputmode="numeric" pattern="[0-9]">
+                    <input class="otp-box" type="text" maxlength="1" inputmode="numeric" pattern="[0-9]">
+                    <input class="otp-box" type="text" maxlength="1" inputmode="numeric" pattern="[0-9]">
+                    <input class="otp-box" type="text" maxlength="1" inputmode="numeric" pattern="[0-9]">
+                    <input class="otp-box" type="text" maxlength="1" inputmode="numeric" pattern="[0-9]">
+                </div>
+                <button type="submit" class="primary-btn" id="proceed">Continue</button>
+                <div class="link-row center">
+                    <span>Didn't receive a code?</span>
+                    <a href="#" class="resend-link" data-timer="register-timer">Resend Code</a>
+                </div>
+                <p class="resend-timer" id="register-timer" style="display:none">
+                    Resend in <span class="timer-count">30</span>s
+                </p>
+            </form>
+        </section>
+
+        <!-- ── New Password ── -->
+        <section id="new-password-form" class="form" style="display:none">
+            <form class="input-form rounded-left" data-form="reset-password">
+                <h2>Create<br>New Password</h2>
+                <p class="sub-label" style="margin-bottom:8px">Create a new strong password to finish</p>
+                <div class="info-grid">
+                    <div class="form-group full">
+                        <label for="reset-password">New Password</label>
+                        <div class="password-input-wrapper">
+                            <input type="password" id="reset-password" placeholder="Min. 8 characters" required>
+                            <span class="password-toggle-icon"><i class="fas fa-eye"></i></span>
+                        </div>
+                    </div>
+                    <div class="form-group full">
+                        <label for="reset-re-password">Re-type Password</label>
+                        <div class="password-input-wrapper">
+                            <input type="password" id="reset-re-password" placeholder="Match new password" required>
+                            <span class="password-toggle-icon"><i class="fas fa-eye"></i></span>
+                        </div>
+                    </div>
+                </div>
+                <button type="submit" class="primary-btn" style="width:85%; margin-top:12px">Complete Reset</button>
+            </form>
+            <div class="form-details" >
+                <img class="imgLogo" src="/src/img/whitelogo.png" alt="InSight">
+                <p>Almost there! Create a new password to complete your InSight password reset.</p>
+            </div>
+        </section>
+        <!-- ── ACCOUNT INFORMATION ── -->
+        <section id="information-form" class="form" style="display:none">
+            <div class="form-details side-light" style="width:32%">
+                <img class="imgLogo" src="/src/img/whitelogo.png" alt="InSight">
+                <p>Almost there! Fill in your details to complete your InSight profile.</p>
+            </div>
+            <form class="input-form rounded-right" style="width:68%" data-form="info">
+                <h2>Account Information</h2>
+                <p class="sub-label" style="margin-bottom:8px">Complete your profile to get started</p>
+                <div class="info-grid">
+                    <div class="form-group full">
+                        <label>Student ID</label>
+                        <input type="text" id="info-student-id" placeholder="e.g. 2023-0193" required>
+                    </div>
+                    <div class="form-group row">
+                        <div class="half">
+                            <label>First Name</label>
+                            <input type="text" id="info-first-name" placeholder="Juan" required>
+                        </div>
+                        <div class="half">
+                            <label>Last Name</label>
+                            <input type="text" id="info-last-name" placeholder="Dela Cruz" required>
+                        </div>
+                    </div>
+                    <div class="form-group row">
+                        <div class="form-group half">
+                            <label>Gender</label>
+                            <select id="info-gender" required>
+                                <option value="">Select gender</option>
+                                <option value="Male">Male</option>
+                                <option value="Female">Female</option>
+                            </select>
+                        </div>
+                        <div class="form-group half">
+                            <label>Department</label>
+                            <select id="info-department" required>
+                                <option value="">Select Department</option>
+                                <!-- Departments loaded via JS -->
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group row">
+                        <div class="form-group half">
+                            <label>Contact</label>
+                            <input type="number" id="info-contact" placeholder="09000000000" required>
+                        </div>
+                        <div class="form-group half">
+                            <label>Section</label>
+                            <input type="text" id="info-section" placeholder="e.g. 1A, 1B, 1C" required>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <button type="reset" class="secondary-btn" style="width:35%; margin-top:12px">Reset</button>
+                    <button type="submit" class="primary-btn" id="information-proceed" style="width:65%; margin-top:12px">Complete Setup</button>
+                </div>
+
+            </form>
+        </section>
+
+        <!-- ── SUCCESS / WAIT ── -->
+        <section id="wait-form" class="form" style="display:none">
+            <div class="form-details" style="width:100%; border-radius:20px; align-items:center; justify-content:center; gap:20px;">
+                <img class="imgLogo" src="/src/img/whitelogo.png" alt="InSight">
+                <div class="success-box">
+                    <svg width="52" height="52" viewBox="0 0 52 52" fill="none">
+                        <circle cx="26" cy="26" r="25" stroke="#4ade80" stroke-width="2"/>
+                        <path d="M15 26l8 8 14-14" stroke="#4ade80" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    <p id="success-msg">Your account has been created!</p>
+                    <p style="font-size: 0.85rem; opacity: 0.8; margin-top: -10px;">Please wait for an administrator to approve your account before you can log in.</p>
+                    <a href="/login" class="primary-btn" style="text-decoration:none; display:inline-block; text-align:center; padding:10px 32px; font-size:16px;">Go to Login</a>
+                </div>
+            </div>
+        </section>
+
+    </div><!-- /.login-card -->
+</main>
+<script src="/js/login-form.js"></script>
+    <script src="../js/password-toggle.js"></script>
+</body>
+</html>

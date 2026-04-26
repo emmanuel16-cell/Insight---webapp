@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>InSight | Visitor Kiosk</title>
+    <link rel="icon" type="image/png" href="../src/img/LOGO.png">
+    <link rel="stylesheet" href="../vendor/fontawesome/css/all.min.css">
+    <style>
+        :root {
+            --primary: #2EC4B6;
+            --secondary: #209388;
+            --bg: #f8fafc;
+            --text: #1e293b;
+            --error: #ef4444;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            margin: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .kiosk-card {
+            background: white;
+            width: 100%;
+            max-width: 900px;
+            border-radius: 24px;
+            box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            overflow: hidden;
+            min-height: 600px;
+        }
+
+        @media (max-width: 768px) {
+            .kiosk-card {
+                grid-template-columns: 1fr;
+            }
+            .info-side {
+                display: none;
+            }
+        }
+
+        .info-side {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+
+        .info-side img {
+            width: 300px;
+            margin-bottom: 24px;
+        }
+
+        .form-side {
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        h2 { margin: 0 0 8px 0; font-size: 1.8rem; color: #0f172a; }
+        p.subtitle { color: #64748b; margin-bottom: 32px; font-size: 0.95rem; }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: #475569;
+        }
+
+        input, textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border-radius: 12px;
+            border: 2px solid #e2e8f0;
+            font-size: 1rem;
+            transition: all 0.2s;
+            box-sizing: border-box;
+        }
+
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(46, 196, 182, 0.1);
+        }
+
+        .camera-container {
+            width: 100%;
+            aspect-ratio: 4/3;
+            background: #000;
+            border-radius: 16px;
+            overflow: hidden;
+            position: relative;
+            margin-bottom: 24px;
+        }
+
+        video, canvas {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .capture-btn {
+            position: absolute;
+            bottom: 16px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: white;
+            color: var(--text);
+            padding: 8px 16px;
+            border-radius: 50px;
+            font-weight: 600;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .submit-btn {
+            background: var(--primary);
+            color: white;
+            padding: 14px;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 1rem;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-top: auto;
+        }
+
+        .submit-btn:hover {
+            background: var(--secondary);
+            transform: translateY(-2px);
+        }
+
+        .submit-btn:disabled {
+            background: #cbd5e1;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .success-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: white;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .success-icon {
+            font-size: 5rem;
+            color: var(--primary);
+            margin-bottom: 24px;
+        }
+
+        .row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="kiosk-card">
+    <div class="info-side">
+        <img src="/src/img/whitelogo.png" alt="InSight">
+        <h1>Welcome to InSight</h1>
+        <p>Please register your visit for campus security. It only takes a minute.</p>
+    </div>
+
+    <div class="form-side">
+        <h2>Visitor Entry</h2>
+        <p class="subtitle">Enter your details and take a quick photo.</p>
+
+        <form id="visitorForm">
+            <div class="row">
+                <div class="input-group">
+                    <label>First Name</label>
+                    <input type="text" id="firstName" required placeholder="John">
+                </div>
+                <div class="input-group">
+                    <label>Last Name</label>
+                    <input type="text" id="lastName" required placeholder="Doe">
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label>Contact Number</label>
+                <input type="tel" id="contact" placeholder="Email or Phone">
+            </div>
+
+            <div class="input-group">
+                <label>Purpose of Visit</label>
+                <textarea id="purpose" rows="2" placeholder="e.g. Meeting with Registrar"></textarea>
+            </div>
+
+            <div class="camera-container">
+                <video id="video" autoplay muted playsinline></video>
+                <canvas id="canvas" style="display: none;"></canvas>
+                <img id="photoPreview" style="display: none; width: 100%; height: 100%; object-fit: cover;">
+                <button type="button" id="captureBtn" class="capture-btn">
+                    <i class="fas fa-camera"></i> <span>Take Photo</span>
+                </button>
+                <button type="button" id="retakeBtn" class="capture-btn" style="display: none;">
+                    <i class="fas fa-undo"></i> <span>Retake</span>
+                </button>
+            </div>
+
+            <button type="submit" id="submitBtn" class="submit-btn" disabled>
+                Confirm Check-in
+            </button>
+        </form>
+    </div>
+</div>
+
+<div id="successOverlay" class="success-overlay">
+    <div class="success-icon"><i class="fas fa-check-circle"></i></div>
+    <h1 id="successName">Registration Successful!</h1>
+    <p>Please wait for security to assist you. Thank you!</p>
+    <p style="margin-top: 40px; color: #94a3b8; font-size: 0.8rem;">Resetting in <span id="timer">5</span> seconds...</p>
+</div>
+
+<script>
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('canvas');
+    const captureBtn = document.getElementById('captureBtn');
+    const retakeBtn = document.getElementById('retakeBtn');
+    const photoPreview = document.getElementById('photoPreview');
+    const visitorForm = document.getElementById('visitorForm');
+    const submitBtn = document.getElementById('submitBtn');
+    const successOverlay = document.getElementById('successOverlay');
+    const timerSpan = document.getElementById('timer');
+
+    let stream = null;
+    let photoBase64 = null;
+
+    // Initialize Camera
+    async function startCamera() {
+        try {
+            stream = await navigator.mediaDevices.getUserMedia({ 
+                video: { facingMode: 'user', width: 640, height: 480 } 
+            });
+            video.srcObject = stream;
+        } catch (err) {
+            console.error("Camera error:", err);
+            alert("Please enable camera access to continue.");
+        }
+    }
+
+    startCamera();
+
+    captureBtn.onclick = () => {
+        const context = canvas.getContext('2d');
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+        
+        photoBase64 = canvas.toDataURL('image/jpeg', 0.8);
+        photoPreview.src = photoBase64;
+        
+        video.style.display = 'none';
+        photoPreview.style.display = 'block';
+        captureBtn.style.display = 'none';
+        retakeBtn.style.display = 'flex';
+        
+        validateForm();
+    };
+
+    retakeBtn.onclick = () => {
+        photoBase64 = null;
+        video.style.display = 'block';
+        photoPreview.style.display = 'none';
+        captureBtn.style.display = 'flex';
+        retakeBtn.style.display = 'none';
+        validateForm();
+    };
+
+    function validateForm() {
+        const fn = document.getElementById('firstName').value.trim();
+        const ln = document.getElementById('lastName').value.trim();
+        submitBtn.disabled = !(fn && ln && photoBase64);
+    }
+
+    ['firstName', 'lastName', 'contact', 'purpose'].forEach(id => {
+        document.getElementById(id).oninput = validateForm;
+    });
+
+    visitorForm.onsubmit = async (e) => {
+        e.preventDefault();
+        submitBtn.disabled = true;
+        submitBtn.textContent = "Processing...";
+
+        const payload = {
+            first_name: document.getElementById('firstName').value.trim(),
+            last_name: document.getElementById('lastName').value.trim(),
+            contact: document.getElementById('contact').value.trim(),
+            purpose: document.getElementById('purpose').value.trim(),
+            face_image_base64: photoBase64
+        };
+
+        try {
+            const res = await fetch('/api/visitors', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            if (res.ok) {
+                document.getElementById('successName').textContent = `Welcome, ${payload.first_name}!`;
+                successOverlay.style.display = 'flex';
+                
+                let count = 5;
+                const interval = setInterval(() => {
+                    count--;
+                    timerSpan.textContent = count;
+                    if (count <= 0) {
+                        clearInterval(interval);
+                        location.reload();
+                    }
+                }, 1000);
+            } else {
+                alert("Error registering. Please try again.");
+                submitBtn.disabled = false;
+                submitBtn.textContent = "Confirm Check-in";
+            }
+        } catch (err) {
+            console.error("Submit error:", err);
+            alert("Network error. Please try again.");
+            submitBtn.disabled = false;
+            submitBtn.textContent = "Confirm Check-in";
+        }
+    };
+</script>
+
+</body>
+</html>

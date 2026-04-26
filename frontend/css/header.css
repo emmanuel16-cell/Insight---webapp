@@ -1,0 +1,236 @@
+
+@import url('/frontend/vendor/fonts/manrope/manrope-local.css');
+
+html {
+    height: 99%;
+    width: 100%;
+    justify-content:center;
+    /* Scrollbar behavior */
+    overflow-x: hidden;
+    scrollbar-width: thin;
+    scrollbar-color: #2EC4B6 transparent;
+}
+
+body {
+    font-family: 'Manrope', sans-serif;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    margin: 0;
+    width: 100%;
+    background: #efefef;
+
+}
+
+h1, h2, h3, .section a{
+    font-family: 'Manrope', sans-serif;
+    font-weight: 800;
+}
+
+.nav-links a {
+    font-family: 'Manrope', sans-serif;
+    font-weight: 600;
+    font-size: 14px;
+    letter-spacing: 0.3px;
+}
+
+.nav-links i {
+    font-size: 1rem;
+    width: 20px;
+    text-align: center;
+}
+
+.main-content {
+    height: 98%;
+    margin-left:67px;
+    padding: 0 10px 10px 0 ;
+}
+
+.search-container {
+    position: fixed;
+    right: 150px;
+    top: 13px;
+
+    display: flex;
+    align-items: center;
+
+    width: 360px;
+    height: 36px;
+
+    padding: 0 14px;
+    gap: 10px;
+
+    background: #023047;
+    border-radius: 999px; /* pill shape */
+}
+
+/* icon */
+.search-icon {
+    font-size: 14px;
+    color: #888;
+}
+
+/* input */
+.all-search {
+    flex: 1;
+    height: 100%;
+    padding: 0 0 0 0;
+
+    background: transparent;
+    border: none;
+    outline: none;
+
+    font-family: 'Manrope', sans-serif;
+
+    color: #e4d8b5;
+    font-size: 13px;
+}
+
+/* placeholder */
+.all-search::placeholder {
+    color: rgba(228, 216, 181, 0.5);
+}
+
+.user {
+    padding-left: 10px;
+    padding-right: 10px;
+    border-radius: 10px;
+    position: fixed;
+    right: 0;
+    margin: 13px 10px 0 0;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+.user:hover {
+    background: #c8c8c8;
+}
+
+/* Hidden by default */
+.user-dropdown {
+    position: absolute;
+    top: 45px;
+    right: 10px; /* Add this to match .user margin */
+    background: white;
+    border-radius: 6px;
+    box-shadow: 0 4px 10px rgba(0,0,0,.15);
+    display: none;
+    flex-direction: column;
+    min-width: 120px;
+    z-index: 1000; /* Ensure it's above other elements */
+    transition:
+            background-color 0.2s ease,
+            color 0.2s ease,
+            transform 0.25s ease,
+            border 0.2s ease;
+}
+
+/* Show when active */
+.user.active .user-dropdown {
+    display: flex;
+}
+#arrowIcon {
+    transition: transform 0.2s ease;
+}
+
+.user.active #arrowIcon {
+    transform: rotate(180deg);
+}
+
+.user-dropdown a {
+    padding: 10px;
+    text-decoration: none;
+    color: #023047;
+}
+
+.user-dropdown a:hover {
+    background: #f1f1f1;
+}
+
+.user-img {
+    height: 35px;
+    width: 35px;
+    border-radius: 50%;
+}
+
+.user-arrow {
+    color: #023047;
+    font-size: 16px;
+    padding: 5px;
+}
+
+/* ── TABLE ACTION DROPDOWNS ── */
+.action-dropdown {
+    position: relative;
+    display: inline-block;
+    text-align: left;
+}
+.action-toggle {
+    background: transparent !important;
+    border: none !important;
+    color: #023047 !important;
+    font-size: 1.1rem !important;
+    cursor: pointer !important;
+    padding: 4px 10px !important;
+    border-radius: 5px !important;
+    transition: background 0.2s !important;
+    box-shadow: none !important;
+}
+.action-toggle:hover {
+    background: rgba(0,0,0,0.08) !important;
+}
+.action-menu {
+    display: none;
+    position: absolute;
+    right: 0;
+    top: 100%;
+    background-color: white;
+    min-width: 140px;
+    box-shadow: 0px 4px 12px rgba(0,0,0,0.15);
+    z-index: 1000;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+    flex-direction: column;
+    padding: 4px 0;
+}
+.action-dropdown.open .action-menu {
+    display: flex;
+}
+.action-menu button, .action-menu a {
+    background: transparent !important;
+    border: none !important;
+    padding: 8px 16px !important;
+    text-align: left !important;
+    width: 100% !important;
+    cursor: pointer !important;
+    color: #1e293b !important;
+    font-family: 'Manrope', sans-serif !important;
+    font-size: 0.85rem !important;
+    font-weight: 600 !important;
+    transition: background 0.2s !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    transform: none !important;
+    text-decoration: none !important;
+}
+.action-menu button:hover, .action-menu a:hover {
+    background-color: #f1f5f9 !important;
+    color: #023047 !important;
+}
+.action-menu .delete-action {
+    color: #ef4444 !important;
+}
+.action-menu .delete-action:hover {
+    background-color: #fef2f2 !important;
+    color: #dc2626 !important;
+}
+.action-menu .edit-action {
+    color: #2EC4B6 !important;
+}
+.action-menu .edit-action:hover {
+    background-color: #f0fdf4 !important;
+    color: #059669 !important;
+}

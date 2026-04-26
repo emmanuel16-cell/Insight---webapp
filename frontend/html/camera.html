@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Insight | Camera</title>
+    <link rel="icon" type="image/png" href="../src/img/LOGO.png">
+    <link rel="shortcut icon" type="image/x-icon" href="../src/img/LOGO.png">
+    <link rel="stylesheet" href="../css/view.css">
+</head>
+
+<link rel="stylesheet" href="../vendor/fontawesome/css/all.min.css">
+
+<div class="main-content">
+    <h2>Gate Security Monitor</h2>
+
+    <div class="camera-section">
+        <div class="container">
+            <video id="video" autoplay muted playsinline></video>
+            <canvas id="overlay"></canvas>
+        </div>
+        <div class="controls">
+            <button id="backBtn" class="edit" style="background: #64748b; display: flex; align-items: center; gap: 8px;">
+                <i class="fas fa-arrow-left"></i> Back
+            </button>
+            <button id="mainToggleBtn" class="edit">Start Camera</button>
+        </div>
+    </div>
+
+    <div class="results-sidebar">
+        <div id="studentCard" class="student-card">
+            <div class="student-info">
+                <h3 id="resName">No Student Detected</h3>
+                <p id="resId">Waiting for scan...</p>
+            </div>
+
+            <div class="status-badges">
+                <div id="badgeUniform" class="badge inactive">
+                    <i class="fas fa-tshirt"></i>
+                    <span>Uniform: None</span>
+                </div>
+                <div id="badgeId" class="badge inactive">
+                    <i class="fas fa-id-card"></i>
+                    <span>ID Card: Not Found</span>
+                </div>
+                <div id="badgeTempPass" class="badge inactive" style="display: none;">
+                    <i class="fas fa-ticket-alt"></i>
+                    <span>Temporary Pass: Active</span>
+                </div>
+                <div id="badgeVisitor" class="badge inactive" style="display: none;">
+                    <i class="fas fa-user-clock"></i>
+                    <span>Status: Visitor</span>
+                </div>
+            </div>
+
+            <div id="processingWrap" class="progress-wrap">
+                <p style="font-size: 0.75rem; margin-bottom: 5px; color: #3b82f6; font-weight: 600;">Verifying Uniform & ID (3s)...</p>
+                <div class="progress-bar">
+                    <div id="progressFill" class="progress-fill"></div>
+                </div>
+            </div>
+
+            <div id="finalStatus" style="margin-top: 15px; font-weight: 700; font-size: 1.1rem; text-align: center; display: none;">
+                ALLOWED
+            </div>
+        </div>
+
+        <div class="student-card" style="border-left-color: #94a3b8;">
+            <div class="student-info">
+                <h3>Camera Info</h3>
+                <p id="camLocation">Location: —</p>
+                <p id="camPosition">Position: —</p>
+            </div>
+        </div>
+
+        <div style="margin: 0 auto">
+            <button class="edit">change camera</button>
+        </div>
+    </div>
+</div>
+
+<div id="blacklistAlert" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(239, 68, 68, 0.9); z-index: 9999; align-items: center; justify-content: center; color: white; text-align: center; flex-direction: column;">
+    <i class="fas fa-exclamation-triangle" style="font-size: 5rem; margin-bottom: 20px;"></i>
+    <h1 style="font-size: 3rem; margin: 0;">BLACKLIST ALERT</h1>
+    <p id="alertName" style="font-size: 1.5rem; margin-top: 10px;">Unknown Person Detected</p>
+    <button onclick="document.getElementById('blacklistAlert').style.display='none'" style="margin-top: 30px; background: white; color: #ef4444; padding: 15px 40px; border-radius: 12px; font-size: 1.2rem;">DISMISS</button>
+</div>
+
+<script type="module">
+import * as mpTasksVision from "/frontend/static/vision_bundle.js";
+
+const video = document.getElementById("video");
+const canvas = document.getElementById("overlay");
+const ctx = canvas.getContext("2d");
+const mainToggleBtn = document.getElementById("mainToggleBtn");
+const backBtn = document.getElementById("backBtn");
+
+backBtn.onclick = () => {
+    if (window.opener) window.close();
+    else window.location.href = '/admin';
+};
+
+let faceDetector;
+let lastVideoTime = -1;
+let lastYOLOTime = 0;
+
+const SCALE = 0.5;
+const YOLO_INTERVAL = 200; // faster YOLO for 3s window
+const INGEST_THROTTLE_MS = 600; // Faster ingest for better responsiveness
+const FINAL_INGEST_THROTTLE = 300; // Even faster when finalizing
+let lastIngestTime = 0;
+
+const params = new URLSearchParams(window.location.search);
+const CAMERA_ID = params.get('camera_id');
+const VIEW_ONLY = params.get('view_only') === '1';
+let CAMERA_POSITION = null;
+let GATE_RULES = { require_uniform: true, require_id_card: true, min_confidence: 0.75 };
+let CAMERA_DATA = null;
+
+async function fetchRules() {
+    try {
+        const res = await fetch('/api/gate/rules', { credentials: 'same-origin' });
+        if (res.ok) {
+            const data = await res.json();
+            GATE_RULES = data.rules;
+        }
+    } catch (e) {
+        console.error("Error fetching rules:", e);
+    }
+}
+fetchRules();
+
+// 3-second window state
+let isFinalizing = false;
+let finalizeStartTime = 0;
+const FINALIZE_DURATION = 3000;
+let currentStudentId = null;
+let currentStudentData = null;
+let windowDetections = {
+    blue_uniform: false,
+    org_shirt: false,
+    id_card: false
+};
+
+async function initializeFaceDetector() {
+    const vision = await mpTasksVision.FilesetResolver.forVisionTasks("/static/wasm");
+    faceDetector = await mpTasksVision.FaceDetector.createFromOptions(vision, {
+        baseOptions: { modelAssetPath: "/static/blaze_face_short_range.tflite", delegate: "CPU" },
+        runningMode: "VIDEO"
+    });
+}
+
+async function start(deviceId = null) {
+    if (!faceDetector) await initializeFaceDetector();
+    const constraints = deviceId ?
+        { video: { deviceId: { exact: deviceId }, width: 800, height: 600 } } :
+        { video: { facingMode: "user", width: 800, height: 600 } };
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia(constraints);
+        window._localCaptureStream = stream;
+        video.srcObject = stream;
+
+        // Ensure video is visible and playing
+        video.style.display = 'block';
+        video.onloadedmetadata = async () => {
+            try {
+                await video.play();
+                resizeCanvas();
+                video.requestVideoFrameCallback(processFrame);
+                mainToggleBtn.textContent = "Stop Camera";
+                mainToggleBtn.className = "btn-stop";
+            } catch (err) {
+                console.error("Video play error:", err);
+            }
+        };
+
+        // Fallback for metadata
+        setTimeout(() => {
+            if (video.readyState >= 2) {
+                 video.play();
+                 resizeCanvas();
+                 video.requestVideoFrameCallback(processFrame);
+            }
+        }, 1000);
+
+        // Update server if this was a manual start
+        if (CAMERA_ID) {
+            await fetch(`/api/gate/cameras/${CAMERA_ID}/client-start`, { method: 'POST', credentials: 'same-origin' });
+        }
+    } catch (e) {
+        alert("Camera start failed: " + e.message);
+    }
+}
+
+async function stop() {
+    if (window._localCaptureStream) {
+        window._localCaptureStream.getTracks().forEach(t => t.stop());
+        window._localCaptureStream = null;
+    }
+    video.srcObject = null;
+    video.style.display = 'none'; // Hide video on stop
+    mainToggleBtn.textContent = "Start Camera";
+    mainToggleBtn.className = "btn-start";
+
+    // Update server if this was a manual stop
+    if (CAMERA_ID) {
+        await fetch(`/api/gate/cameras/${CAMERA_ID}/client-stop`, { method: 'POST', credentials: 'same-origin' });
+    }
+}
+
+mainToggleBtn.onclick = async () => {
+    if (VIEW_ONLY) return;
+    if (mainToggleBtn.textContent === "Start Camera") {
+        if (CAMERA_DATA && CAMERA_DATA.device_id) {
+            await start(CAMERA_DATA.device_id);
+        } else if (CAMERA_ID && CAMERA_DATA && CAMERA_DATA.rtsp_url) {
+             // RTSP camera - start server-side
+             try {
+                const r = await fetch(`/api/gate/cameras/${CAMERA_ID}/start`, { method: 'POST', credentials: 'same-origin' });
+                if (r.ok) {
+                    mainToggleBtn.textContent = "Stop Camera";
+                    mainToggleBtn.className = "btn-stop";
+                }
+             } catch(e) { alert("Server start error: " + e.message); }
+        } else {
+            await start();
+        }
+    } else {
+        if (CAMERA_DATA && CAMERA_DATA.device_id) {
+            await stop();
+        } else if (CAMERA_ID && CAMERA_DATA && CAMERA_DATA.rtsp_url) {
+            // RTSP camera - stop server-side
+            try {
+                const r = await fetch(`/api/gate/cameras/${CAMERA_ID}/stop`, { method: 'POST', credentials: 'same-origin' });
+                if (r.ok) {
+                    mainToggleBtn.textContent = "Start Camera";
+                    mainToggleBtn.className = "btn-start";
+                }
+             } catch(e) { alert("Server stop error: " + e.message); }
+        } else {
+            await stop();
+        }
+    }
+};
+
+function resizeCanvas() {
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+}
+
+async function processFrame(now) {
+    if (video.paused || video.ended || !video.srcObject) return;
+
+    if (video.currentTime !== lastVideoTime) {
+        lastVideoTime = video.currentTime;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        const faceResult = faceDetector.detectForVideo(video, now);
+        drawFaceBoxes(faceResult.detections || []);
+
+        if (CAMERA_ID && faceResult?.detections?.length) {
+            const throttle = isFinalizing ? FINAL_INGEST_THROTTLE : INGEST_THROTTLE_MS;
+            if (now - lastIngestTime > throttle) {
+                lastIngestTime = now;
+                sendFrameToServer(faceResult.detections[0]).catch(()=>{});
+            }
+        }
+
+        if (now - lastYOLOTime > YOLO_INTERVAL) {
+            lastYOLOTime = now;
+            await sendFrameToYOLO();
+        }
+
+        if (isFinalizing) {
+            updateFinalizeProgress(now);
+        }
+    }
+    video.requestVideoFrameCallback(processFrame);
+}
+
+function updateFinalizeProgress(now) {
+    const elapsed = now - finalizeStartTime;
+    const progress = Math.min(100, (elapsed / FINALIZE_DURATION) * 100);
+    document.getElementById("progressFill").style.width = progress + "%";
+
+    if (elapsed >= FINALIZE_DURATION) {
+        finalizeResult();
+    }
+}
+
+function finalizeResult() {
+    isFinalizing = false;
+    document.getElementById("processingWrap").style.display = "none";
+    const finalStatus = document.getElementById("finalStatus");
+    finalStatus.style.display = "block";
+
+    // Combine knowledge from today (daily_*) and the current 3s window (windowDetections)
+    const hasUniform = (currentStudentData?.daily_uniform) || windowDetections.blue_uniform || windowDetections.org_shirt;
+    const hasId = (currentStudentData?.daily_id_card) || windowDetections.id_card || currentStudentData?.is_temp_pass;
+    const isRecognized = !!currentStudentData;
+    const isVisitor = currentStudentData?.status === 'visitor';
+
+    const card = document.getElementById("studentCard");
+    card.className = "student-card";
+
+    if (isRecognized) {
+        const reqUniform = GATE_RULES.require_uniform;
+        const reqId = GATE_RULES.require_id_card;
+
+        const uniformOK = !reqUniform || hasUniform;
+        const idOK = !reqId || hasId;
+
+        // Force UI update for badges even if not "ALLOWED" yet
+        updateBadges();
+
+        if (isVisitor) {
+            finalStatus.textContent = "VISITOR";
+            finalStatus.style.color = "#3b82f6";
+            card.classList.add("processing"); // Blue for visitor
+        } else if (uniformOK && idOK) {
+            finalStatus.textContent = "ALLOWED";
+            finalStatus.style.color = "#10b981";
+            card.classList.add("allowed");
+        } else {
+            finalStatus.textContent = "WAITING FOR REQUIREMENTS";
+            finalStatus.style.color = "#f59e0b";
+            card.classList.add("warning");
+
+            let reason = "";
+            if (!uniformOK) reason = "(Uniform Needed)";
+            else if (!idOK) reason = "(ID Card Needed)";
+            finalStatus.textContent = reason;
+        }
+    } else {
+        finalStatus.textContent = "NOT RECOGNIZED";
+        finalStatus.style.color = "#ef4444";
+        card.classList.add("denied");
+    }
+}
+
+function drawFaceBoxes(detections) {
+    ctx.strokeStyle = "lime";
+    ctx.lineWidth = 3;
+    detections.forEach(det => {
+        const box = det.boundingBox;
+        ctx.strokeRect(box.originX, box.originY, box.width, box.height);
+    });
+}
+
+async function sendFrameToYOLO() {
+    const tempCanvas = document.createElement("canvas");
+    const tctx = tempCanvas.getContext("2d");
+    tempCanvas.width = video.videoWidth * SCALE;
+    tempCanvas.height = video.videoHeight * SCALE;
+    tctx.drawImage(video, 0, 0, tempCanvas.width, tempCanvas.height);
+    const blob = await new Promise(res => tempCanvas.toBlob(res, "image/jpeg", 0.6));
+
+    const fd = new FormData();
+    fd.append("file", blob);
+    const res = await fetch("/detect", { method: "POST", body: fd });
+    const detections = await res.json();
+
+    processYOLOResults(detections);
+    drawYOLOBoxes(detections);
+}
+
+function processYOLOResults(detections) {
+    detections.forEach(det => {
+        const cls = det.class.toLowerCase();
+        // Match only specified classes: Blue Uniform, Org Shirt, ID Card
+        if (cls.includes("blue") && cls.includes("uniform")) windowDetections.blue_uniform = true;
+        if (cls.includes("org") && cls.includes("shirt")) windowDetections.org_shirt = true;
+        if (cls.includes("id") && cls.includes("card")) windowDetections.id_card = true;
+    });
+
+    if (isFinalizing) {
+        updateBadges();
+    }
+}
+
+function updateBadges() {
+    const bUniform = document.getElementById("badgeUniform");
+    const bId = document.getElementById("badgeId");
+    const bTemp = document.getElementById("badgeTempPass");
+    const bVisitor = document.getElementById("badgeVisitor");
+
+    if (windowDetections.blue_uniform) {
+        bUniform.className = "badge active";
+        bUniform.querySelector("span").textContent = "Uniform: Blue Uniform";
+    } else if (windowDetections.org_shirt) {
+        bUniform.className = "badge active";
+        bUniform.querySelector("span").textContent = "Uniform: Org Shirt";
+    }
+
+    if (windowDetections.id_card) {
+        bId.className = "badge active";
+        bId.querySelector("span").textContent = "ID Card: Found";
+    }
+
+    if (currentStudentData?.is_temp_pass) {
+        bTemp.style.display = "flex";
+        bTemp.className = "badge active";
+        bId.className = "badge active";
+        bId.querySelector("span").textContent = "ID Card: Temp Pass";
+    }
+
+    if (currentStudentData?.status === 'visitor') {
+        bVisitor.style.display = "flex";
+        bVisitor.className = "badge active";
+    }
+}
+
+function drawYOLOBoxes(detections) {
+    ctx.lineWidth = 2;
+    ctx.font = "14px Arial";
+    detections.forEach(det => {
+        const box = det.box;
+        const cls = det.class.toLowerCase();
+
+        // Only draw specified classes
+        if (!cls.includes("blue") && !cls.includes("org") && !cls.includes("id")) return;
+
+        ctx.strokeStyle = cls.includes("id") ? "yellow" : "red";
+        ctx.fillStyle = ctx.strokeStyle;
+
+        ctx.strokeRect(box.x1/SCALE, box.y1/SCALE, (box.x2-box.x1)/SCALE, (box.y2-box.y1)/SCALE);
+        ctx.fillText(det.class, box.x1/SCALE, (box.y1/SCALE)-5);
+    });
+}
+
+function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
+
+async function sendFrameToServer(det) {
+    if (!CAMERA_ID) return;
+    try {
+        // Use a temporary canvas to capture the FULL frame
+        const fullCanvas = document.createElement("canvas");
+        fullCanvas.width = video.videoWidth;
+        fullCanvas.height = video.videoHeight;
+        const fctx = fullCanvas.getContext("2d");
+        fctx.drawImage(video, 0, 0);
+
+        const blob = await new Promise(res => fullCanvas.toBlob(res, "image/jpeg", 0.7));
+        if (!blob) return;
+
+        const fd = new FormData();
+        fd.append("file", blob, 'frame.jpg');
+
+        // Metadata includes face bounding box for recognition and browser YOLO hints
+        const meta = {
+            bbox: det.boundingBox,
+            ts: Date.now(),
+            has_uniform: windowDetections.blue_uniform || windowDetections.org_shirt,
+            has_id_card: windowDetections.id_card,
+            is_finalizing: isFinalizing
+        };
+        fd.append("meta", JSON.stringify(meta));
+
+        await fetch(`/api/gate/cameras/${CAMERA_ID}/ingest`, {
+            method: 'POST',
+            body: fd,
+            credentials: 'same-origin'
+        });
+    } catch (e) {
+        console.error("Frame ingest error:", e);
+    }
+}
+
+async function startRemote(cameraId) {
+    // Polling loop for last detection metadata
+    async function pollMetadata() {
+        try {
+            const detResp = await fetch(`/api/gate/cameras/${cameraId}/last?ts=${Date.now()}`, { credentials: 'same-origin', cache: 'no-store' });
+            if (detResp.ok) {
+                const meta = await detResp.json();
+                if (meta?.last_detection) handleLastDetection(meta.last_detection);
+            }
+        } catch (err) {} finally { setTimeout(pollMetadata, 400); }
+    }
+
+    // Polling loop for server snapshots (only if local video not running)
+    async function pollSnapshots() {
+        if (window._localCaptureStream) {
+            // Video is active, ensure it is shown and return
+            if (video.style.display === 'none') video.style.display = 'block';
+            return;
+        }
+        try {
+            const snapResp = await fetch(`/api/gate/cameras/${cameraId}/snapshot?ts=${Date.now()}`, { credentials: 'same-origin', cache: 'no-store' });
+            if (snapResp.ok) {
+                const img = await createImageBitmap(await snapResp.blob());
+                canvas.width = img.width; canvas.height = img.height;
+                ctx.drawImage(img, 0, 0);
+                if (video && video.style.display !== 'none') video.style.display = 'none';
+            }
+        } catch (err) {} finally { setTimeout(pollSnapshots, 400); }
+    }
+
+    pollMetadata();
+    pollSnapshots();
+    pollStatus();
+}
+
+async function pollStatus() {
+    if (!CAMERA_ID) return;
+    try {
+        const res = await fetch('/api/gate/cameras', { credentials: 'same-origin' });
+        if (res.ok) {
+            const data = await res.json();
+            const cam = (data.cameras || []).find(c => String(c.id) === String(CAMERA_ID));
+            if (cam) {
+                const isCurrentlyRunning = (mainToggleBtn.textContent === "Stop Camera");
+                if (cam.active && !isCurrentlyRunning) {
+                    // Started externally
+                    console.log("Camera started externally, syncing UI");
+                    if (cam.device_id) await start(cam.device_id);
+                    else {
+                        mainToggleBtn.textContent = "Stop Camera";
+                        mainToggleBtn.className = "btn-stop";
+                    }
+                } else if (!cam.active && isCurrentlyRunning) {
+                    // Stopped externally
+                    console.log("Camera stopped externally, syncing UI");
+                    if (cam.device_id) await stop();
+                    else {
+                        mainToggleBtn.textContent = "Start Camera";
+                        mainToggleBtn.className = "btn-start";
+                    }
+                }
+            }
+        }
+    } catch (e) {
+    } finally {
+        setTimeout(pollStatus, 3000);
+    }
+}
+
+function handleLastDetection(d) {
+    if (!d) return;
+
+    // Blacklist check
+    if (d.status === 'denied') {
+        const alert = document.getElementById("blacklistAlert");
+        if (alert.style.display === 'none') {
+            alert.style.display = 'flex';
+            document.getElementById("alertName").textContent = d.full_name || "Unknown Person";
+            // Play alert sound if needed (optional)
+        }
+    }
+
+    // If it's a new person or enough time passed, start the 3s window
+    const personId = d.student_id || d.visitor_id;
+    if (personId && personId !== currentStudentId) {
+        currentStudentId = personId;
+        currentStudentData = d;
+
+        // Visitors don't need uniform/ID check for entry (usually)
+        if (d.status === 'visitor') {
+            showImmediateResult(d, "VISITOR");
+            return;
+        }
+
+        // ENTRY LOGIC: Check if already logged and if requirements are met
+        if (!CAMERA_POSITION || CAMERA_POSITION.toLowerCase() !== 'exit') {
+            if (d.checked_in_today) {
+                const missingUniform = GATE_RULES.require_uniform && !d.daily_uniform;
+                const missingId = GATE_RULES.require_id_card && !d.daily_id_card;
+
+                if (!missingUniform && !missingId) {
+                    showImmediateResult(d, "ALLOWED (Already Logged)");
+                    return;
+                } else {
+                    console.log("Student checked in but missing requirements. Starting re-scan window.");
+                }
+            }
+        } else {
+            // EXIT LOGIC: Only face recognition required, skip 3s window
+            if (d.checked_in_today || d.checked_out_today) {
+                 showImmediateResult(d, "ALLOWED (Exit Checked)");
+                 return;
+            }
+        }
+
+        startFinalizing(d);
+    }
+
+    // Draw overlay on canvas
+    const bbox = d.face_bbox;
+    if (bbox?.x1 != null) {
+        ctx.strokeStyle = d.status === 'allowed' ? 'lime' : (d.status === 'denied' ? '#ef4444' : '#f59e0b');
+        ctx.lineWidth = 3;
+        ctx.strokeRect(bbox.x1, bbox.y1, bbox.x2-bbox.x1, bbox.y2-bbox.y1);
+        ctx.fillStyle = ctx.strokeStyle;
+        ctx.font = '16px Arial';
+        ctx.fillText(`${d.full_name || 'Unknown'}`, bbox.x1, bbox.y1 - 6);
+    }
+}
+
+function showImmediateResult(student, statusText) {
+    isFinalizing = false;
+    document.getElementById("processingWrap").style.display = "none";
+    const finalStatus = document.getElementById("finalStatus");
+    finalStatus.style.display = "block";
+    finalStatus.textContent = statusText;
+    finalStatus.style.color = "#10b981";
+
+    document.getElementById("resName").textContent = student.full_name || "Student";
+    document.getElementById("resId").textContent = "ID: " + (student.student_id_num || student.student_id || "—");
+
+    const card = document.getElementById("studentCard");
+    card.className = "student-card allowed";
+
+    // Auto-activate badges for visual consistency
+    const bUniform = document.getElementById("badgeUniform");
+    const bId = document.getElementById("badgeId");
+    const bTemp = document.getElementById("badgeTempPass");
+    const bVisitor = document.getElementById("badgeVisitor");
+
+    bUniform.className = "badge active";
+    bUniform.querySelector("span").textContent = "Uniform: OK (Skipped)";
+    bId.className = "badge active";
+    bId.querySelector("span").textContent = "ID Card: OK (Skipped)";
+
+    if (student.is_temp_pass) {
+        bTemp.style.display = "flex";
+        bTemp.className = "badge active";
+    }
+    if (student.status === 'visitor') {
+        bVisitor.style.display = "flex";
+        bVisitor.className = "badge active";
+        finalStatus.style.color = "#3b82f6";
+    }
+}
+
+function startFinalizing(student) {
+    isFinalizing = true;
+    finalizeStartTime = performance.now();
+    windowDetections = { blue_uniform: false, org_shirt: false, id_card: false };
+
+    document.getElementById("resName").textContent = student.full_name || "Student";
+    document.getElementById("resId").textContent = "ID: " + (student.student_id || "—");
+    document.getElementById("processingWrap").style.display = "block";
+    document.getElementById("finalStatus").style.display = "none";
+    document.getElementById("studentCard").className = "student-card processing";
+
+    resetBadges();
+}
+
+function resetBadges() {
+    document.getElementById("badgeUniform").className = "badge inactive";
+    document.getElementById("badgeUniform").querySelector("span").textContent = "Uniform: None";
+    document.getElementById("badgeId").className = "badge inactive";
+    document.getElementById("badgeId").querySelector("span").textContent = "ID Card: Not Found";
+    document.getElementById("badgeTempPass").style.display = "none";
+    document.getElementById("badgeVisitor").style.display = "none";
+}
+
+if (VIEW_ONLY) {
+    mainToggleBtn.textContent = "View Only";
+    mainToggleBtn.className = "btn-start";
+    mainToggleBtn.disabled = true;
+    mainToggleBtn.style.opacity = "0.7";
+    mainToggleBtn.style.cursor = "not-allowed";
+}
+
+if (CAMERA_ID) {
+    (async () => {
+        try {
+            const res = await fetch('/api/gate/cameras', { credentials: 'same-origin' });
+            if (res.ok) {
+                const data = await res.json();
+                const cam = (data.cameras || []).find(c => String(c.id) === String(CAMERA_ID));
+                if (cam) {
+                    CAMERA_DATA = cam;
+                    document.getElementById("camLocation").textContent = "Location: " + (cam.location || "—");
+                    document.getElementById("camPosition").textContent = "Position: " + (cam.position || "—");
+                    CAMERA_POSITION = cam.position;
+
+                    // Start remote monitoring (metadata/snapshots/status)
+                    startRemote(CAMERA_ID);
+                }
+            }
+        } catch (e) {
+            console.error("Initialization error:", e);
+        }
+    })();
+} else {
+    mainToggleBtn.onclick = async () => {
+        if (VIEW_ONLY) return;
+        if (mainToggleBtn.textContent === "Start Camera") await start();
+        else await stop();
+    };
+}
+</script>
+</body>
+</html>

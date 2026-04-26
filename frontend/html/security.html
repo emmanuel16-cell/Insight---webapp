@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>InSight | Security Staff</title>
+    <link rel="icon" type="image/png" href="../src/img/LOGO.png">
+    <link rel="stylesheet" href="../vendor/fontawesome/css/all.min.css">
+    <style>
+        :root {
+            --bg: #f8fbff;
+            --card: #ffffff;
+            --text: #023047;
+            --muted: #5b6b7a;
+            --line: #e4ebf3;
+            --primary: #2EC4B6;
+            --primary-hover: #219EBC;
+            --accent: #FFB703;
+            --accent-hover: #FB8500;
+            --danger: #dc2626;
+            --header-dark: #023047;
+        }
+        * { box-sizing: border-box; font-family: Arial, sans-serif; }
+        body { margin: 0; background: var(--bg); color: var(--text); }
+        .topbar {
+            background: linear-gradient(90deg, #023047 0%, #0a4a66 100%);
+            color: #fff;
+            padding: 12px 18px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 3px solid var(--primary);
+        }
+        .topbar h2 { margin:0; font-size:1.05rem; letter-spacing: .3px; }
+        .top-actions { display:flex; gap:10px; }
+        .btn {
+            border: none;
+            border-radius: 10px;
+            padding: 9px 14px;
+            cursor: pointer;
+            font-weight: 700;
+            transition: all .2s ease;
+            background: #eef2f7;
+            color: var(--text);
+        }
+        .btn:hover { transform: translateY(-1px); }
+        .btn-primary { background: var(--accent); color: var(--text); }
+        .btn-primary:hover { background: var(--accent-hover); color: #fff; box-shadow: 0 4px 12px rgba(251,133,0,.3); }
+        .btn-danger { background: var(--danger); color:#fff; }
+        .wrap { padding:16px; display:grid; gap:16px; grid-template-columns: 1fr 1fr; }
+        .card {
+            background: var(--card);
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(2,6,23,.08);
+            overflow: hidden;
+            border-top: 3px solid var(--primary);
+        }
+        .card h3 {
+            margin: 0;
+            padding: 12px 14px;
+            border-bottom: 1px solid var(--line);
+            font-size: 1rem;
+            color: var(--text);
+        }
+        .card-body { padding:12px 14px; }
+        .row { display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-bottom:10px; }
+        select {
+            padding: 8px;
+            border: 2px solid var(--primary);
+            border-radius: 8px;
+            min-width: 220px;
+            color: var(--text);
+            background: #fff;
+        }
+        select:focus { outline: none; border-color: var(--accent-hover); }
+        table { width:100%; border-collapse: collapse; font-size: .9rem; }
+        th, td { text-align:left; padding:10px 8px; border-bottom:1px solid var(--line); }
+        th { color: #fff; font-weight:700; background: var(--header-dark); }
+        .muted { color:var(--muted); font-size:.85rem; }
+        .status-entry { color:#0f766e; font-weight:700; }
+        .status-exit { color:#c2410c; font-weight:700; }
+        .status-denied { color:#b91c1c; font-weight:700; }
+        .grid-full { grid-column: 1 / -1; }
+        .modal-backdrop { position:fixed; inset:0; background:rgba(2,6,23,.65); display:none; align-items:center; justify-content:center; z-index:9999; }
+        .modal { background:#fff; width:min(760px, 92vw); border-radius:14px; overflow:hidden; border: 2px solid #ef4444; }
+        .modal-hd {
+            padding:12px 14px;
+            background: linear-gradient(90deg, #b91c1c 0%, #dc2626 100%);
+            color:#fff;
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+        }
+        .modal-bd { padding:14px; display:grid; gap:14px; grid-template-columns: 260px 1fr; }
+        .alert-img { width:100%; height:220px; object-fit:cover; background:#e2e8f0; border-radius:10px; }
+        .kv { margin:0; display:grid; grid-template-columns:120px 1fr; gap:8px; font-size:.95rem; }
+        .kv dt { color:var(--muted); }
+        .kv dd { margin:0; font-weight:600; }
+        @media (max-width: 980px) { .wrap { grid-template-columns: 1fr; } .modal-bd { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+    <div class="topbar">
+        <h2>Security Staff Console</h2>
+        <div class="top-actions">
+            <button id="refreshAll" class="btn btn-primary"><i class="fas fa-sync-alt"></i> Refresh</button>
+            <button id="logoutBtn" class="btn"><i class="fas fa-sign-out-alt"></i> Logout</button>
+        </div>
+    </div>
+
+    <main class="wrap">
+        <section class="card grid-full">
+            <h3>Camera Monitor</h3>
+            <div class="card-body">
+                <div class="row">
+                    <select id="cameraSelect"><option value="">Loading cameras...</option></select>
+                    <button id="openCameraBtn" class="btn btn-primary"><i class="fas fa-video"></i> View Camera</button>
+                </div>
+                <p class="muted">Opens `camera.html` for the selected camera feed.</p>
+            </div>
+        </section>
+
+        <section class="card">
+            <h3>Gate Logs</h3>
+            <div class="card-body">
+                <table>
+                    <thead>
+                        <tr><th>Time</th><th>Student ID</th><th>Name</th><th>Status</th><th>Method</th></tr>
+                    </thead>
+                    <tbody id="gateLogsBody">
+                        <tr><td colspan="5" class="muted">Loading...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="card">
+            <h3>In/Out Logs</h3>
+            <div class="card-body">
+                <table>
+                    <thead>
+                        <tr><th>Time</th><th>Type</th><th>ID</th><th>Name</th></tr>
+                    </thead>
+                    <tbody id="inOutLogsBody">
+                        <tr><td colspan="4" class="muted">Loading...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <div id="blacklistModalBackdrop" class="modal-backdrop">
+        <div class="modal">
+            <div class="modal-hd">
+                <strong><i class="fas fa-exclamation-triangle"></i> Blacklisted Student Alert</strong>
+                <button id="closeBlacklistModal" class="btn"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-bd">
+                <img id="alertImage" class="alert-img" src="/src/camera-preview/preview.png" alt="Detection Image">
+                <div>
+                    <dl class="kv">
+                        <dt>Name</dt><dd id="alertName">—</dd>
+                        <dt>Student ID</dt><dd id="alertStudentId">—</dd>
+                        <dt>Severity</dt><dd id="alertSeverity">—</dd>
+                        <dt>Reason</dt><dd id="alertReason">—</dd>
+                        <dt>Time</dt><dd id="alertTime">—</dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/logout.js"></script>
+    <script>
+        const cameraSelect = document.getElementById('cameraSelect');
+        const gateLogsBody = document.getElementById('gateLogsBody');
+        const inOutLogsBody = document.getElementById('inOutLogsBody');
+        const modalBackdrop = document.getElementById('blacklistModalBackdrop');
+        const closeBlacklistModal = document.getElementById('closeBlacklistModal');
+
+        let lastAlertId = 0;
+
+        function fmtDateTime(v) {
+            if (!v) return '—';
+            const d = new Date(v);
+            if (Number.isNaN(d.getTime())) return v;
+            return d.toLocaleString();
+        }
+
+        async function loadCameras() {
+            const res = await fetch('/api/gate/cameras', { credentials: 'same-origin' });
+            const data = await res.json();
+            const cameras = data.cameras || [];
+            if (!cameras.length) {
+                cameraSelect.innerHTML = '<option value="">No cameras found</option>';
+                return;
+            }
+            cameraSelect.innerHTML = cameras.map(c => `<option value="${c.id}">#${c.id} - ${c.name || 'Camera'} (${c.location || 'N/A'})</option>`).join('');
+        }
+
+        async function loadGateLogs() {
+            const res = await fetch('/api/gate/logs?limit=40', { credentials: 'same-origin' });
+            const data = await res.json();
+            const rows = data.logs || [];
+            if (!rows.length) {
+                gateLogsBody.innerHTML = '<tr><td colspan="5" class="muted">No gate logs yet.</td></tr>';
+                return;
+            }
+            gateLogsBody.innerHTML = rows.map(r => {
+                const sid = r.student_id || r.visitor_id || '—';
+                const name = `${r.first_name || ''} ${r.last_name || ''}`.trim() || 'Unknown';
+                const statusClass = r.overall_status === 'denied' ? 'status-denied' : '';
+                return `<tr>
+                    <td>${fmtDateTime(r.timestamp)}</td>
+                    <td>${sid}</td>
+                    <td>${name}</td>
+                    <td class="${statusClass}">${r.overall_status || '—'}</td>
+                    <td>${r.method || '—'}</td>
+                </tr>`;
+            }).join('');
+        }
+
+        async function loadInOutLogs() {
+            const res = await fetch('/api/gate/in-out-logs?limit=40', { credentials: 'same-origin' });
+            const data = await res.json();
+            const rows = data.logs || [];
+            if (!rows.length) {
+                inOutLogsBody.innerHTML = '<tr><td colspan="4" class="muted">No in/out logs yet.</td></tr>';
+                return;
+            }
+            inOutLogsBody.innerHTML = rows.map(r => {
+                const typeClass = r.activity_type === 'entry' ? 'status-entry' : 'status-exit';
+                const sid = r.student_code || (r.visitor_id ? `VIS-${r.visitor_id}` : '—');
+                return `<tr>
+                    <td>${fmtDateTime(r.timestamp)}</td>
+                    <td class="${typeClass}">${r.activity_type || '—'}</td>
+                    <td>${sid}</td>
+                    <td>${r.full_name || 'Unknown'}</td>
+                </tr>`;
+            }).join('');
+        }
+
+        function showBlacklistModal(alert) {
+            document.getElementById('alertName').textContent = alert.full_name || 'Unknown';
+            document.getElementById('alertStudentId').textContent = alert.student_code || alert.student_id || '—';
+            document.getElementById('alertSeverity').textContent = alert.blacklist_severity || '—';
+            document.getElementById('alertReason').textContent = alert.blacklist_reason || 'No reason provided';
+            document.getElementById('alertTime').textContent = fmtDateTime(alert.timestamp);
+            const img = document.getElementById('alertImage');
+            img.src = alert.snapshot_url || alert.avatar_url || '/source/camera-preview/preview.png';
+            img.onerror = () => { img.src = alert.avatar_url || '/source/camera-preview/preview.png'; };
+            modalBackdrop.style.display = 'flex';
+        }
+
+        async function pollBlacklistAlerts() {
+            const res = await fetch(`/api/gate/blacklist-alerts?since_id=${lastAlertId}&limit=10`, { credentials: 'same-origin' });
+            const data = await res.json();
+            const alerts = data.alerts || [];
+            if (!alerts.length) return;
+            const latest = alerts[0];
+            lastAlertId = Math.max(lastAlertId, ...alerts.map(a => a.id || 0));
+            showBlacklistModal(latest);
+        }
+
+        document.getElementById('openCameraBtn').addEventListener('click', () => {
+            const id = cameraSelect.value;
+            if (!id) return alert('Select a camera first.');
+            window.open(`/camera?camera_id=${id}&view_only=1`, '_blank', 'noopener');
+        });
+
+        document.getElementById('refreshAll').addEventListener('click', async () => {
+            await Promise.all([loadGateLogs(), loadInOutLogs(), loadCameras()]);
+        });
+
+        closeBlacklistModal.addEventListener('click', () => { modalBackdrop.style.display = 'none'; });
+        modalBackdrop.addEventListener('click', (e) => { if (e.target === modalBackdrop) modalBackdrop.style.display = 'none'; });
+
+        (async function init() {
+            await Promise.all([loadCameras(), loadGateLogs(), loadInOutLogs()]);
+            setInterval(loadGateLogs, 7000);
+            setInterval(loadInOutLogs, 7000);
+            setInterval(pollBlacklistAlerts, 2500);
+        })();
+    </script>
+</body>
+</html>

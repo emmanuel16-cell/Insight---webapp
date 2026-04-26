@@ -1,0 +1,1592 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>InSight | Admin</title>
+    <link rel="icon" type="image/png" href="../src/img/LOGO.png">
+    <link rel="shortcut icon" type="image/x-icon" href="../src/img/LOGO.png">
+    <link rel="stylesheet" href="../vendor/fontawesome/css/all.min.css">
+    <link rel="stylesheet" href="../css/side-style.css">
+    <link rel="stylesheet" href="../css/modal.css">
+    <link rel="stylesheet" href="../css/header.css">
+    <link rel="stylesheet" href="../css/admin/admin-style.css">
+    <link rel="stylesheet" href="../css/password-toggle.css">
+    <style>
+        .btn-admin-cam {
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: opacity 0.2s;
+        }
+        .btn-admin-cam:hover {
+            opacity: 0.9;
+        }
+    </style>
+    <script src="/static/vision_bundle.js"></script>
+    <script type="module">
+        import * as mpTasksVision from "/frontend/static/vision_bundle.js";
+        window.mpTasksVision = mpTasksVision; // Export to global for page-show.js
+    </script>
+
+</head>
+<body>
+
+<!-- ══ SIDENAV ══════════════════════════════════════════════ -->
+<nav class="sidenav" id="sidenav">
+    <div class="navbar-container">
+        <div class="logo">
+            <img class="imgLogo" src="/src/img/LOGO.png" data-hover="/source/img/whitelogo.png" alt="InSight Logo">
+        </div>
+        <ul class="nav-links">
+            <li><a href="#home"       class="active"><i class="fas fa-home"></i><span>Overview</span></a></li>
+            <li><a href="#department"><i class="fas fa-building"></i><span>Department</span></a></li>
+
+            <!-- Users Dropdown Group -->
+            <li class="has-dropdown">
+                <a href="#" class="dropdown-toggle"><i class="fas fa-users"></i><span>Users</span><i class="fas fa-chevron-down dropdown-arrow"></i></a>
+                <ul class="submenu">
+                    <li><a href="#faculty"><i class="fas fa-user-tie"></i><span>Faculty</span></a></li>
+                    <li><a href="#student"><i class="fas fa-user-graduate"></i><span>Student</span></a></li>
+                    <li><a href="#pending-students"><i class="fas fa-user-clock"></i><span>New Students</span></a></li>
+                </ul>
+            </li>
+
+            <!-- Security & Logs Dropdown Group -->
+            <li class="has-dropdown">
+                <a href="#" class="dropdown-toggle"><i class="fas fa-shield-alt"></i><span>Security</span><i class="fas fa-chevron-down dropdown-arrow"></i></a>
+                <ul class="submenu">
+                    <li><a href="#gate-logs"><i class="fas fa-clipboard-list"></i><span>Gate Logs</span></a></li>
+                    <li><a href="#visitors"><i class="fas fa-users-viewfinder"></i><span>Visitors</span></a></li>
+                    <li><a href="#blacklist"><i class="fas fa-user-slash"></i><span>Blacklist</span></a></li>
+                    <li><a href="#violations"><i class="fas fa-exclamation-triangle"></i><span>Violations</span></a></li>
+                </ul>
+            </li>
+        </ul>
+        <button type="button" id="openCameraModal" class="camera"><i class="fas fa-camera"></i><span>Camera</span></button>
+    </div>
+</nav>
+
+<!-- ══ TOPBAR ═══════════════════════════════════════════════ -->
+<div class="topbar" id="topbar">
+    <h2 id="topbar-name">Dashboard</h2>
+    <div class="user">
+        <img class="user-img" id="topbar-avatar" src="/src/img/profile.png" alt="User">
+        <a class="user-arrow" id="userToggle">
+            <i class="fas fa-chevron-down" id="arrowIcon"></i>
+        </a>
+        <div class="user-dropdown">
+            <a href="#profile" class="nav-to-profile"><i class="fas fa-id-card"></i> Profile</a>
+            <a href="#add-account" id="add-accountBtn"><i class="fas fa-plus"></i>Account</a>
+            <a href="#" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Logout</a>
+        </div>
+    </div>
+</div>
+
+<!-- ── ADD VISITOR MODAL ────────────────────────────────────── -->
+<div class="add-account" id="addVisitorModal" style="display:none">
+    <div class="add-account-overlay" id="visitorOverlay">
+        <div class="add-account-modal">
+            <div class="aa-header">
+                <div class="aa-header-left">
+                    <div class="aa-header-icon"><i class="fas fa-user-friends"></i></div>
+                    <div>
+                        <h3>Add Visitor</h3>
+                        <span>Enter visitor details for entry</span>
+                    </div>
+                </div>
+                <button class="aa-close" id="closeVisitorModal"><i class="fas fa-times"></i></button>
+            </div>
+            <form id="visitorForm">
+                <div class="aa-body">
+                    <div class="aa-input-group">
+                        <label>First Name</label>
+                        <input type="text" id="v-firstname" required placeholder="Visitor's First Name">
+                    </div>
+                    <div class="aa-input-group">
+                        <label>Last Name</label>
+                        <input type="text" id="v-lastname" required placeholder="Visitor's Last Name">
+                    </div>
+                    <div class="aa-input-group">
+                        <label>Contact Number</label>
+                        <input type="text" id="v-contact" placeholder="Contact Information">
+                    </div>
+                    <div class="aa-input-group">
+                        <label>Purpose of Visit</label>
+                        <textarea id="v-purpose" placeholder="Reason for visiting" style="width: 100%; border-radius: 6px; border: 1px solid #ddd; padding: 8px;"></textarea>
+                    </div>
+                </div>
+                <div class="aa-footer">
+                    <button type="button" class="aa-btn-cancel" id="cancelVisitor">Cancel</button>
+                    <button type="submit" class="aa-btn-submit">Register Entry</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- ── ADD BLACKLIST MODAL ───────────────────────────────────── -->
+<div class="add-account" id="addBlacklistModal" style="display:none">
+    <div class="add-account-overlay" id="blacklistOverlay">
+        <div class="add-account-modal">
+            <div class="aa-header">
+                <div class="aa-header-left">
+                    <div class="aa-header-icon" style="background: #e11d48;"><i class="fas fa-user-slash"></i></div>
+                    <div>
+                        <h3>Add to Blacklist</h3>
+                        <span>Restrict access for specific individuals</span>
+                    </div>
+                </div>
+                <button class="aa-close" id="closeBlacklistModal"><i class="fas fa-times"></i></button>
+            </div>
+            <form id="blacklistForm">
+                <div class="aa-body">
+                    <div class="aa-input-group">
+                        <label>First Name</label>
+                        <input type="text" id="b-firstname" required placeholder="First Name">
+                    </div>
+                    <div class="aa-input-group">
+                        <label>Last Name</label>
+                        <input type="text" id="b-lastname" required placeholder="Last Name">
+                    </div>
+                    <div class="aa-input-group">
+                        <label>Student ID (if applicable)</label>
+                        <input type="text" id="b-studentid" placeholder="Student/Employee ID">
+                    </div>
+                    <div class="aa-input-group">
+                        <label>Severity</label>
+                        <select id="b-severity" style="width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #ddd;">
+                            <option value="low">Low</option>
+                            <option value="medium" selected>Medium</option>
+                            <option value="high">High</option>
+                            <option value="critical">Critical</option>
+                        </select>
+                    </div>
+                    <div class="aa-input-group">
+                        <label>Reason</label>
+                        <textarea id="b-reason" required placeholder="Reason for blacklisting" style="width: 100%; border-radius: 6px; border: 1px solid #ddd; padding: 8px;"></textarea>
+                    </div>
+                </div>
+                <div class="aa-footer">
+                    <button type="button" class="aa-btn-cancel" id="cancelBlacklist">Cancel</button>
+                    <button type="submit" class="aa-btn-submit" style="background: #e11d48;">Add to Blacklist</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- ══ MAIN CONTENT ═════════════════════════════════════════ -->
+<div class="main-content">
+
+    <!-- ── OVERVIEW ──────────────────────────────────────── -->
+    <section id="home" class="page-section">
+        <div class="card-container">
+            <div class="row">
+                <div class="sml-card" style="background:#2EC4B6;">
+                    <span class="home-card-label">Users:</span>
+                    <h3 id="stat-students" style="color: white;font-size: 30px; font-weight: 800;">0</h3>
+                </div>
+                <div class="sml-card" style="background:#219EBC;">
+                    <span class="home-card-label">Cameras:</span>
+                    <h3 id="stat-instructors" style="color: white;font-size: 30px; font-weight: 800;">0</h3>
+                </div>
+                <div class="sml-card" style="background:#ffb703;">
+                    <span class="home-card-label">Departments:</span>
+                    <h3 id="stat-departments" style="color: white;font-size: 30px; font-weight: 800;">0</h3>
+                </div>
+                <div class="sml-card" style="background:#FB8500;">
+                    <span class="home-card-label">Violators:</span>
+                    <h3 id="stat-cameras" style="color: white; font-size: 30px; font-weight: 800;">0</h3>
+                </div>
+
+            </div>
+        </div>
+        <div class="lrg-card-container">
+            <div class="row">
+                <div class="lrg-card">
+                    <div class="heading">
+                        <h3>Gate Activity Log</h3>
+                        <div class="divider">
+                        </div></div>
+                    <div class="chart-wrapper">
+                        <div class="chart-container"><canvas id="attendanceChart" ></canvas></div>
+                    </div>
+                </div>
+                <div class="lrg-card" >
+                    <div class="heading"><h3>Gate Activity</h3><div class="divider"></div></div>
+                    <div class="chart-wrapper">
+                        <div class="chart-container"><canvas id="gateChart" height="180"></canvas></div>
+                    </div>
+                    <div class="chart-center"><h2>342</h2><span>STUDENTS</span></div>
+                    <div class="donut-label">
+                        <div class="donut-column">
+                            <span class="donut-enter">Entry</span>
+                            <span class="donut-exit">Exit</span>
+                            <span class="donut-absent">Absent</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="lrg-card-container">
+            <div class="row">
+                <div class="bot-card" style="flex: 1;">
+                    <div class="heading">
+                        <h3>Gate Attendance by Dept</h3>
+                        <label for="role">View</label>
+                        <select id="role" class="combo-box">
+                            <option value="All" selected>All</option>
+                            <option value="ACT">ACT</option>
+                            <option value="BSHM">BSHM</option>
+                            <option value="BEED">BEED</option>
+                            <option value="BSED">BSED</option>
+                            <option value="BSCS">BSCS</option>
+                        </select>
+                    </div>
+                    <div class="department-chart-container"><canvas id="department-attendance-Chart"></canvas></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ── DEPARTMENT ────────────────────────────────────── -->
+    <section id="department" class="page-section" style="display:none;">
+        <div class="full-card-container">
+            <div class="full-card">
+                <div class="table-controls-container">
+                    <div class="table-header main-header">
+                        <div class="title">Department List</div>
+                        <div class="section">
+                            <div class="search"><label>Search:</label><input type="text" placeholder="Type to filter..."></div>
+
+                            <button class="edit" id="add-dept-btn" style=" border:none; padding:8px 16px; border-radius:6px; cursor:pointer;">
+                                <i class="fas fa-plus"></i> Add Department
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
+                <div class="table-container">
+                    <table id="department-table">
+                        <thead><tr><th>Department Code</th><th>Department Name</th><th>Action</th></tr></thead>
+                        <tbody>
+                        <!-- Loaded via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ── VISITORS ────────────────────────────────────── -->
+    <section id="visitors" class="page-section" style="display:none;">
+        <div class="full-card-container">
+            <div class="full-card">
+                <div class="table-controls-container">
+                    <div class="table-header main-header">
+                        <div class="title">Visitor Management</div>
+                        <div class="section">
+                            <div class="search"><label>Search:</label><input type="text" id="visitor-search" placeholder="Type to filter..."></div>
+                            <button class="edit" id="add-visitor-btn" style=" border:none; padding:8px 16px; border-radius:6px; cursor:pointer;">
+                                <i class="fas fa-plus"></i> Add Visitor
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="table-container">
+                    <table id="visitors-table">
+                        <thead>
+                        <tr>
+                            <th>First Name</th>
+                            <th>Last Name</th>
+                            <th>Contact</th>
+                            <th>Purpose</th>
+                            <th>Date</th>
+                            <th>Time In</th>
+                            <th>Time Out</th>
+                            <th>Action</th>
+                        </tr>
+                        </thead>
+                        <tbody><!-- Loaded via JS --></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ── BLACKLIST ────────────────────────────────────── -->
+    <section id="blacklist" class="page-section" style="display:none;">
+        <div class="full-card-container">
+            <div class="full-card">
+                <div class="table-controls-container">
+                    <div class="table-header main-header">
+                        <div class="title">Blacklist Management</div>
+                        <div class="section">
+                            <div class="search"><label>Search:</label><input type="text" id="blacklist-search" placeholder="Type to filter..."></div>
+                            <button class="edit" id="add-blacklist-btn" style=" border:none; padding:8px 16px; border-radius:6px; cursor:pointer; background: #e11d48;">
+                                <i class="fas fa-user-plus"></i> Add to Blacklist
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="table-container">
+                    <table id="blacklist-table">
+                        <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Student ID</th>
+                            <th>Reason</th>
+                            <th>Severity</th>
+                            <th>Status</th>
+                            <th>Date Reported</th>
+                            <th>Action</th>
+                        </tr>
+                        </thead>
+                        <tbody><!-- Loaded via JS --></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ── UNIFORM VIOLATIONS ──────────────────────────────── -->
+    <section id="violations" class="page-section" style="display:none;">
+        <div class="full-card-container">
+            <div class="full-card">
+                <div class="table-controls-container">
+                    <div class="table-header main-header">
+                        <div class="title">Uniform & ID Violations</div>
+                        <div class="section">
+                            <div class="search"><label>Search:</label><input type="text" id="violation-search" placeholder="Type to filter..."></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="table-container">
+                    <table id="violations-table">
+                        <thead>
+                        <tr>
+                            <th>Student Name</th>
+                            <th>Student ID</th>
+                            <th>Violation Type</th>
+                            <th>Description</th>
+                            <th>Date</th>
+                            <th>Image</th>
+                        </tr>
+                        </thead>
+                        <tbody><!-- Loaded via JS --></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ── FACULTY ────────────────────────────────────────── -->
+    <section id="faculty" class="page-section" style="display:none;">
+        <div class="full-card-container">
+            <div class="full-card">
+                <div class="table-controls-container">
+                    <div class="table-header main-header">
+                        <div class="title">Instructors</div>
+                        <div class="section">
+                            <div class="filter-group">
+                                <label>Department:</label>
+                                <select>
+                                    <option selected>All</option>
+                                    <option>BSCS</option>
+                                    <option>BSHM</option>
+                                    <option>BEED</option>
+                                    <option>BSED</option>
+                                    <option>ACT</option>
+                                </select>
+                            </div>
+                            <div class="search"><label>Search:</label><input type="text" placeholder="Type to filter..."></div>
+                        </div>
+                    </div>
+
+                </div>
+                <div class="table-container">
+                    <table id="faculty-table">
+                        <thead><tr><th>ID No.</th><th>Full Name</th><th>Department</th><th>Contact</th><th>Email</th><th>Status</th><th>Action</th></tr></thead>
+                        <tbody>
+                        <!-- Loaded via JS -->
+                        </tbody>
+                    </table>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- ── STUDENT ────────────────────────────────────────── -->
+    <section id="student" class="page-section" style="display:none;">
+        <div class="full-card-container">
+            <div class="full-card">
+                <div class="table-controls-container">
+                    <div class="table-header main-header">
+                        <div class="title">Student Lists</div>
+                        <div class="search"><label>Search:</label><input type="text" placeholder="Type to filter..."></div>
+                    </div>
+
+                </div>
+                <div class="table-container">
+                    <table id="accepted-students-table">
+                        <thead><tr><th>ID No.</th><th>Full Name</th><th>Section</th><th>Status</th><th>Action</th></tr></thead>
+                        <tbody>
+                        <!-- Loaded via JS -->
+                        </tbody>
+                    </table>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- ── PENDING STUDENTS ────────────────────────────────── -->
+    <section id="pending-students" class="page-section" style="display:none;">
+        <div class="full-card-container">
+            <div class="full-card">
+                <div class="table-controls-container">
+                    <div class="table-header main-header">
+                        <div class="title">Pending Student</div>
+                        <div class="section">
+                            <div class="search"><label>Search:</label><input type="text" placeholder="Type to filter..."></div>
+                        </div>
+                    </div>
+                    <div class="table-header sub-header">
+                        <div class="show-entries"></div>
+                    </div>
+                </div>
+                <div class="table-container">
+                    <table id="pending-students-table">
+                        <thead>
+                        <tr>
+                            <th>ID No.</th><th>Full Name</th><th>Section</th><th>Contact</th><th>Email</th>
+                            <th class="action-header">Action <a class="edit" id="approve-all-btn" style=" border:none; padding:8px 16px; border-radius:6px; cursor:pointer;">
+                                <i class="fas fa-check-double"></i>Accept All</a>
+                            </th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <!-- Loaded via JS -->
+                        </tbody>
+                    </table>
+                </div>
+                <div class="table-footer">
+                    <span class="footer-status" id="pending-count">Showing 0 entries.</span>
+                    <span id="last-refresh" style="font-size: 0.75rem; color: #9ca3af; margin-left: auto;">Last updated: Never</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ── GATE ACTIVITY LOGS ────────────────────────────────── -->
+    <section id="gate-logs" class="page-section" style="display:none;">
+        <div class="full-card-container">
+            <div class="full-card">
+                <div class="table-controls-container">
+                    <div class="table-header main-header">
+                        <div class="title">Gate Activity Logs</div>
+                        <div class="section">
+                            <div class="search"><label>Search:</label><input type="text" placeholder="Type to filter..."></div>
+                            <button id="refreshLogs" class="edit" style=" border:none; padding:8px 16px; border-radius:6px; cursor:pointer;">Refresh</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="table-container">
+                    <table id="gate-logs-table">
+                        <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Student ID</th>
+                            <th>Name</th>
+                            <th>Check In</th>
+                            <th>Check Out</th>
+                            <th>Uniform</th>
+                            <th>ID Card</th>
+                        </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </section>
+    <!-- ══════════════════════════════════════════════════════
+             PROFILE
+     ══════════════════════════════════════════════════════ -->
+    <section id="profile" class="page-section profile-page" style="display:none;">
+
+        <!-- View card -->
+        <div class="profile-card" id="view-profile-card">
+            <div class="profile-banner">
+                <div class="banner-avatar-wrap">
+                    <img class="banner-avatar" id="view-avatar" src="/src/img/profile.png" alt="Avatar">
+                </div>
+            </div>
+            <div class="profile-identity">
+                <h2 class="profile-name" id="view-fullname">Mr. First Last</h2>
+                <p class="profile-course" id="view-course">Administrator</p>
+            </div>
+            <div class="profile-divider"></div>
+            <div class="profile-meta-grid">
+                <div class="profile-meta-item"><span class="meta-label">Employee ID</span><span class="meta-value" id="view-stdid">—</span></div>
+                <div class="profile-meta-item"><span class="meta-label">Department</span><span class="meta-value" id="view-depart">—</span></div>
+                <div class="profile-meta-item"><span class="meta-label">Role</span><span class="meta-value" id="view-role">—</span></div>
+            </div>
+            <div class="profile-divider"></div>
+            <div class="profile-two-col">
+                <div class="profile-block">
+                    <h4 class="profile-block-title">Access Level</h4>
+                    <div class="profile-pills" id="view-subjects">
+                        <div class="profile-pill">Full Access</div>
+                        <div class="profile-pill">User Management</div>
+                        <div class="profile-pill">Reports</div>
+                    </div>
+                </div>
+                <div class="profile-block">
+                    <h4 class="profile-block-title">Account Details</h4>
+                    <div class="profile-info-grid">
+                        <div class="profile-info-item"><span class="meta-label">Gender</span><span class="meta-value" id="view-gender">—</span></div>
+                        <div class="profile-info-item"><span class="meta-label">Contact</span><span class="meta-value" id="view-contact">—</span></div>
+                        <div class="profile-info-item"><span class="meta-label">Email</span><span class="meta-value" id="view-email">—</span></div>
+                    </div>
+                </div>
+            </div>
+            <div class="profile-actions">
+                <button class="save-button" id="editBtn"><i class="fas fa-pen"></i> Edit Profile</button>
+                <button class="save-button" id="update-password-btn" style="margin-left:auto;background:#219EBC;color:#fff;"><i class="fas fa-key"></i> Update Password</button>
+            </div>
+        </div>
+
+        <!-- Edit card -->
+        <div class="profile-card" id="edit-profile-card" style="display:none;">
+            <div class="profile-banner edit-banner">
+                <div class="banner-avatar-wrap">
+                    <img class="banner-avatar" id="edit-avatar-preview" src="/src/img/profile.png" alt="Avatar">
+                    <label class="avatar-edit-btn" for="imgInput"><i class="fas fa-camera"></i></label>
+                    <input type="file" id="imgInput" accept="image/*" style="display:none;">
+                </div>
+                <div class="banner-edit-title"><span class="banner-edit-label">Editing Profile</span></div>
+            </div>
+            <div class="edit-section-title">Personal Information</div>
+            <div class="edit-grid">
+                <div class="edit-field"><label class="edit-label">First Name</label><input type="text" id="firstname" class="textbox" placeholder="First Name" autocomplete="off"></div>
+                <div class="edit-field"><label class="edit-label">Last Name</label><input type="text" id="lastname" class="textbox" placeholder="Last Name" autocomplete="off"></div>
+                <div class="edit-field">
+                    <label class="edit-label">Gender</label>
+                    <select id="gender" class="textbox combo-box">
+                        <option value="" disabled selected>Select Gender</option>
+                        <option value="Male">Male</option>
+                        <option value="Female">Female</option>
+                    </select>
+                </div>
+                <div class="edit-field">
+                    <label class="edit-label">Department</label>
+                    <select id="depart" class="textbox combo-box">
+                        <option value="" disabled selected>Select Department</option>
+                        <option value="BSCS">BSCS</option>
+                        <option value="BSED">BSED</option>
+                        <option value="BEED">BEED</option>
+                        <option value="BSHM">BSHM</option>
+                        <option value="ACT">ACT</option>
+                    </select>
+                </div>
+                <div class="edit-field"><label class="edit-label">Contact</label><input type="number" id="contact" class="textbox" placeholder="09XX-XXX-XXXX" autocomplete="off"></div>
+            </div>
+            <div class="profile-actions">
+                <button class="save-button" id="saveBtn"><i class="fas fa-save"></i> Save Changes</button>
+                <button class="cancel-button" id="cancelBtn"><i class="fas fa-times"></i> Cancel</button>
+            </div>
+        </div>
+
+    </section>
+
+</div><!-- end .main-content -->
+
+<!-- ── PASSWORD UPDATE MODAL ──────────────────────────────── -->
+<div class="add-account" id="password-modal" style="display: none">
+    <div class="add-account-overlay" id="passwordOverlay">
+        <div class="add-account-modal">
+            <div class="aa-header">
+                <div class="aa-header-left">
+                    <div class="aa-header-icon"><i class="fas fa-key"></i></div>
+                    <div>
+                        <h3>Update Password</h3>
+                        <span>Provide your current password to continue</span>
+                    </div>
+                </div>
+                <button class="aa-close" id="closePasswordModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="aa-body">
+                <div class="aa-grid" style="margin-top:20px;">
+                    <div class="aa-field aa-field-full">
+                        <label class="aa-label">Current Password <span class="aa-required">*</span></label>
+                        <div class="password-input-wrapper">
+                            <input type="password" id="current-password" class="aa-input" placeholder="Enter current password" required>
+                            <span class="password-toggle-icon"><i class="fas fa-eye"></i></span>
+                        </div>
+                    </div>
+                    <div class="aa-field aa-field-full" style="margin-top:15px;">
+                        <label class="aa-label">New Password <span class="aa-required">*</span></label>
+                        <div class="password-input-wrapper">
+                            <input type="password" id="new-password" class="aa-input" placeholder="Enter new password" required>
+                            <span class="password-toggle-icon"><i class="fas fa-eye"></i></span>
+                        </div>
+                    </div>
+                    <div class="aa-field aa-field-full" style="margin-top:15px;">
+                        <label class="aa-label">Confirm New Password <span class="aa-required">*</span></label>
+                        <div class="password-input-wrapper">
+                            <input type="password" id="confirm-new-password" class="aa-input" placeholder="Confirm new password" required>
+                            <span class="password-toggle-icon"><i class="fas fa-eye"></i></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="aa-message" id="passwordMessage" style="display:none;"></div>
+            </div>
+            <div class="aa-footer">
+                <button class="aa-btn-cancel" id="passwordCancel">
+                    <i class="fas fa-times"></i> Cancel
+                </button>
+                <button class="aa-btn-submit" id="passwordSubmit">
+                    <i class="fas fa-save"></i>
+                    <span>Update Password</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ══ CAMERA MODAL ══════════════════════════════════════════ -->
+<div class="camera-modal" id="cameraListModal" style="display: none">
+    <div class="camera-container">
+        <div class="camera-content">
+            <div class="camera-header">
+                <h3>Camera List</h3>
+                <button class="close-modal" id="closeCameraListBtn">×</button>
+            </div>
+            <div class="camera-modal-container" id="cameraListContainer">
+                <div class="camera-card add-camera-card" id="addCameraCard">
+                    <div class="add-camera"><i class="fas fa-plus"></i><h2>Add Camera</h2></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ── ADD CAMERA MODAL (shown when clicking Add Camera) ───────────────── -->
+<div class="camera-modal" id="addCameraModal" style="display:none;">
+    <div class="camera-container">
+        <div class="camera-content">
+            <div class="camera-header">
+                <h3>Add Camera</h3>
+                <button class="close-modal" id="closeAddCameraBtn">×</button>
+            </div>
+            <div style="padding:8px;">
+                <div style="display:flex; gap:12px; align-items:flex-start;">
+                    <div style="width:220px;">
+                        <canvas id="previewCanvas" width="220" height="140" style="border-radius:6px; background:#eee; display:block;"></canvas>
+                        <video id="previewVideo" autoplay playsinline muted style="display:none;"></video>
+                    </div>
+                    <div style="flex:1; display:flex; flex-direction:column; gap:8px;">
+                        <label>Camera device</label>
+                        <select id="newCamDeviceSelect"><option value="">-- Select camera device --</option></select>
+                        <label>Or RTSP / stream URL (optional)</label>
+                        <input id="newCamUrl" placeholder="RTSP / stream URL (optional)" />
+                        <label>Location</label>
+                        <input id="newCamLocation" placeholder="Location" />
+                        <label>Position</label>
+                        <select id="newCamPosition"><option value="Entry">Entry</option><option value="Exit">Exit</option></select>
+                        <div style="display:flex; gap:8px; margin-top:6px;">
+                            <button id="capturePreviewBtn">Capture Preview</button>
+                            <button id="createCamBtn">Create</button>
+                            <button id="cancelCamBtn">Cancel</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ── STOP CONFIRMATION MODAL ─────────────────────────────── -->
+<div class="add-account" id="stopConfirmModal" style="display:none">
+    <div class="add-account-overlay" id="stopConfirmOverlay">
+        <div class="add-account-modal">
+            <div class="aa-header">
+                <div class="aa-header-left">
+                    <div class="aa-header-icon"><i class="fas fa-camera"></i></div>
+                    <div>
+                        <h3 id="stopConfirmTitle">Stop Camera</h3>
+                        <span id="stopConfirmSub">Confirm stopping this camera</span>
+                    </div>
+                </div>
+                <button class="aa-close" id="closeStopConfirm">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="aa-body">
+                <div style="padding:8px;">
+                    <p id="stopConfirmText">Do you want to stop this camera?</p>
+                </div>
+            </div>
+            <div class="aa-footer">
+                <button class="aa-btn-cancel" id="stopCancel">Cancel</button>
+                <button class="aa-btn-submit" id="stopConfirmBtn">Stop Camera</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Camera management for Admin — dynamic camera list + create/start/stop
+    (function(){
+        const openBtn = document.getElementById('openCameraModal');
+        const cameraModal = document.getElementById('cameraListModal');
+        const closeBtn = document.getElementById('closeCameraListBtn');
+        const container = document.getElementById('cameraListContainer');
+
+        // Helper: enumerate video input devices
+        async function enumerateVideoDevices() {
+            if (!navigator.mediaDevices || !navigator.mediaDevices.enumerateDevices) return[];
+            const devices = await navigator.mediaDevices.enumerateDevices();
+            return devices.filter(d => d.kind === 'videoinput');
+        }
+
+        // Helper: capture one snapshot from a device and return dataURL
+        async function captureDeviceSnapshot(deviceId) {
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) throw new Error('Media devices not supported');
+            const stream = await navigator.mediaDevices.getUserMedia({
+                video: { deviceId: { exact: deviceId }, width: 800, height: 600 }
+            });
+            const video = document.createElement('video');
+            video.autoplay = true;
+            video.playsInline = true;
+            video.muted = true;
+            video.srcObject = stream;
+
+            await new Promise((resolve) => {
+                let settled = false;
+                video.onloadedmetadata = () => {
+                    try { video.play(); } catch (e) {}
+                    // small delay to allow first frame
+                    setTimeout(() => { if (!settled) { settled = true; resolve(); } }, 250);
+                };
+                // fallback in case loadedmetadata doesn't fire quickly
+                setTimeout(() => { if (!settled) { settled = true; resolve(); } }, 1200);
+            });
+
+            const canvas = document.createElement('canvas');
+            canvas.width = 800;
+            canvas.height = 600;
+            const ctx = canvas.getContext('2d');
+            try { ctx.drawImage(video, 0, 0, 800, 600); } catch (e) {}
+
+            // stop stream
+            try { stream.getTracks().forEach(t => t.stop()); } catch (e) {}
+
+            return canvas.toDataURL('image/jpeg', 0.8);
+        }
+
+        // Client-side capture manager for browser device cameras
+        const activeClientCaptures = {};
+
+        async function startClientCapture(camId, deviceId) {
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) throw new Error('Media devices not supported');
+            if (activeClientCaptures[camId]) return; // already running
+
+            const stream = await navigator.mediaDevices.getUserMedia({
+                video: { deviceId: { exact: deviceId }, width: 800, height: 600 },
+                audio: false
+            });
+            const video = document.createElement('video');
+            video.autoplay = true; video.playsInline = true; video.muted = true;
+            video.srcObject = stream;
+            await new Promise((resolve) => { video.onloadedmetadata = () => { try{ video.play(); }catch{}; resolve(); }; setTimeout(resolve, 1200); });
+
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+
+            let stopped = false;
+
+            async function tick() {
+                if (stopped) return;
+                try {
+                    const w = 800;
+                    const h = 600;
+                    canvas.width = w; canvas.height = h;
+                    ctx.drawImage(video, 0, 0, w, h);
+                    const blob = await new Promise(res => canvas.toBlob(res, 'image/jpeg', 0.7));
+                    if (blob) {
+                        const fd = new FormData();
+                        fd.append('file', blob, 'frame.jpg');
+                        fd.append('meta', JSON.stringify({ source: 'admin', ts: Date.now() }));
+                        // fire-and-forget ingest
+                        fetch(`/api/gate/cameras/${camId}/ingest`, { method: 'POST', body: fd, credentials: 'same-origin' }).catch(()=>{});
+                    }
+                } catch (e) {
+                    console.warn('client ingest error', e);
+                } finally {
+                    if (!stopped) activeClientCaptures[camId].timer = setTimeout(tick, 800);
+                }
+            }
+
+            activeClientCaptures[camId] = { stream, video, canvas, timer: null, stop: () => {
+                    stopped = true;
+                    try { if (activeClientCaptures[camId].timer) clearTimeout(activeClientCaptures[camId].timer); } catch(e){}
+                    try { stream.getTracks().forEach(t => t.stop()); } catch(e){}
+                    delete activeClientCaptures[camId];
+                }};
+
+            // start loop
+            tick();
+            return activeClientCaptures[camId];
+        }
+
+        function stopClientCapture(camId) {
+            const entry = activeClientCaptures[camId];
+            if (!entry) return;
+            try { if (entry.timer) clearTimeout(entry.timer); } catch(e){}
+            try { entry.stream.getTracks().forEach(t => t.stop()); } catch(e){}
+            delete activeClientCaptures[camId];
+        }
+
+        // Confirmation modal helper
+        function showStopConfirm(cam) {
+            return new Promise((resolve) => {
+                const modal = document.getElementById('stopConfirmModal');
+                const text = document.getElementById('stopConfirmText');
+                const closeBtn = document.getElementById('closeStopConfirm');
+                const cancelBtn = document.getElementById('stopCancel');
+                const confirmBtn = document.getElementById('stopConfirmBtn');
+                text.textContent = `Do you want to stop camera ${cam.id} — ${cam.name} (${cam.location || '—'}, ${cam.position || '—'})?`;
+                modal.style.display = 'block';
+
+                function cleanup() {
+                    modal.style.display = 'none';
+                    closeBtn.removeEventListener('click', onCancel);
+                    cancelBtn.removeEventListener('click', onCancel);
+                    confirmBtn.removeEventListener('click', onConfirm);
+                }
+                function onCancel() { cleanup(); resolve(false); }
+                function onConfirm() { cleanup(); resolve(true); }
+
+                closeBtn.addEventListener('click', onCancel);
+                cancelBtn.addEventListener('click', onCancel);
+                confirmBtn.addEventListener('click', onConfirm);
+            });
+        }
+        let cameraSyncTimer = null;
+
+        openBtn?.addEventListener('click', (e) => {
+            e.preventDefault();
+            cameraModal.style.display = 'block';
+            loadCameras();
+            // Start polling for status sync while modal is open
+            if (cameraSyncTimer) clearInterval(cameraSyncTimer);
+            cameraSyncTimer = setInterval(syncCameraStatus, 3000);
+        });
+
+        closeBtn?.addEventListener('click', () => {
+            cameraModal.style.display = 'none';
+            if (cameraSyncTimer) {
+                clearInterval(cameraSyncTimer);
+                cameraSyncTimer = null;
+            }
+        });
+
+        async function syncCameraStatus() {
+            if (cameraModal.style.display === 'none') return;
+            try {
+                const res = await fetch('/api/gate/cameras', { credentials: 'same-origin' });
+                if (!res.ok) return;
+                const data = await res.json();
+                const cams = data.cameras ||[];
+
+                cams.forEach(cam => {
+                    const card = container.querySelector(`.camera-card[data-cam-id="${cam.id}"]`);
+                    if (!card) return;
+                    const toggleBtnEl = card.querySelector('.toggle-btn');
+                    const statusLabel = card.querySelector('.camera-row:nth-child(2) label:nth-child(2)');
+                    const dot = card.querySelector('.dot-top');
+
+                    if (toggleBtnEl && statusLabel && dot) {
+                        const currentActive = cam.active;
+                        const btnText = currentActive ? 'Stop' : 'Start';
+                        const btnIcon = currentActive ? '<i class="fas fa-stop-circle" style="color:#ef4444;"></i> ' : '<i class="fas fa-play-circle" style="color:#2EC4B6;"></i> ';
+
+                        const spanText = toggleBtnEl.querySelector('span');
+                        if (spanText && spanText.textContent !== btnText) {
+                            toggleBtnEl.innerHTML = btnIcon + '<span>' + btnText + '</span>';
+                            statusLabel.textContent = currentActive ? 'Active' : 'Inactive';
+                            dot.style.color = currentActive ? '#2EC4B6' : '#da2626';
+
+                            // SYNC: Stop local capture if it's running but camera is now inactive
+                            if (!currentActive && activeClientCaptures[cam.id]) {
+                                console.log(`Camera ${cam.id} stopped externally, stopping local capture`);
+                                stopClientCapture(cam.id);
+                            }
+                            // SYNC: Start local capture if it's NOT running but camera is now active (only if it has a device_id)
+                            else if (currentActive && !activeClientCaptures[cam.id] && cam.device_id) {
+                                console.log(`Camera ${cam.id} started externally, starting local capture`);
+                                startClientCapture(cam.id, cam.device_id);
+                            }
+                        }
+                    }
+                });
+            } catch (e) {}
+        }
+
+        async function loadCameras() {
+            container.innerHTML = '<div >Loading cameras...</div>';
+            try {
+                const res = await fetch('/api/gate/cameras', { credentials: 'same-origin' });
+                if (!res.ok) throw new Error('Failed to load cameras');
+                const data = await res.json();
+                const cams = data.cameras ||[];
+
+                container.innerHTML = '';
+
+                for (const cam of cams) {
+                    const card = document.createElement('div');
+                    card.className = 'camera-card';
+                    card.setAttribute('data-cam-id', cam.id);
+                    card.innerHTML = `
+                    <div class="camera-preview" style="position:relative;">
+                        <img class="cam-thumb" src="/src/camera-preview/preview.png" alt="Preview" style="width:100%;height:140px;object-fit:cover; margin-top: 6px">
+                        <div class="dot-top" style="position:absolute; right:8px; top:8px; color: ${cam.active ? '#2EC4B6' : '#da2626'};">⦿</div>
+                        <div class="camera-details">
+                            <div class="camera-row"><label>Camera:</label><label>${cam.name}</label></div>
+                            <div class="camera-row"><label>Status:</label><label>${cam.active ? 'Active' : 'Inactive'}</label></div>
+                            <div class="camera-row"><label>Location:</label><label>${cam.location || ''}</label></div>
+                            <div class="camera-row"><label>Position:</label><label>${cam.position || ''}</label></div>
+                        </div>
+                    </div>
+                    <div style="margin-top:8px; display:flex; justify-content: flex-end; width: 100%; padding: 0 10px;">
+                        <div class="action-dropdown">
+                            <button class="action-toggle" style="font-size: 0.9rem !important;"><i class="fas fa-cog"></i> Options</button>
+                            <div class="action-menu" style="bottom:100%; top:auto; right:0;">
+                                <button class="open-btn edit-action"><i class="fas fa-external-link-alt"></i> Open</button>
+                                <button class="toggle-btn"><i class="fas fa-${cam.active ? 'stop-circle" style="color:#ef4444;' : 'play-circle" style="color:#2EC4B6;'}"></i> <span>${cam.active ? 'Stop' : 'Start'}</span></button>
+                                <button class="remove-btn delete-action"><i class="fas fa-trash"></i> Remove</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                    // Attach unified controls
+                    container.appendChild(card);
+
+                    const openBtnEl = card.querySelector('.open-btn');
+                    const toggleBtnEl = card.querySelector('.toggle-btn');
+                    const removeBtnEl = card.querySelector('.remove-btn');
+
+                    openBtnEl?.addEventListener('click', () => {
+                        window.open('/camera?camera_id=' + cam.id, '_blank', 'noopener');
+                    });
+
+                    // Toggle start/stop behavior
+                    toggleBtnEl?.addEventListener('click', async () => {
+                        // If currently active, show confirmation and stop
+                        const isActive = !!cam.active || toggleBtnEl.dataset.running === '1';
+                        if (isActive) {
+                            const ok = await showStopConfirm(cam);
+                            if (!ok) return;
+                            try {
+                                if (cam.device_id) {
+                                    // stop client capture
+                                    stopClientCapture(cam.id);
+                                    await fetch(`/api/gate/cameras/${cam.id}/client-stop`, { method: 'POST', credentials: 'same-origin' });
+                                } else {
+                                    const r = await fetch('/api/gate/cameras/' + cam.id + '/stop', { method: 'POST', credentials: 'same-origin' });
+                                    const j = await r.json().catch(()=>({}));
+                                    if (!r.ok) throw new Error(j.detail || j.message || 'Stop failed');
+                                }
+                                // reflect state in UI
+                                toggleBtnEl.innerHTML = '<i class="fas fa-play-circle" style="color:#2EC4B6;"></i> <span>Start</span>';
+                                toggleBtnEl.dataset.running = '0';
+                                await loadCameras();
+                            } catch (err) {
+                                alert('Stop error: ' + (err.message || err));
+                            }
+                            return;
+                        }
+
+                        // Start
+                        try {
+                            if (cam.device_id) {
+                                // client-side capture + mark DB active
+                                await fetch(`/api/gate/cameras/${cam.id}/client-start`, { method: 'POST', credentials: 'same-origin' });
+                                await startClientCapture(cam.id, cam.device_id);
+                                toggleBtnEl.innerHTML = '<i class="fas fa-stop-circle" style="color:#ef4444;"></i> <span>Stop</span>';
+                                toggleBtnEl.dataset.running = '1';
+                            } else if (cam.rtsp_url) {
+                                const r = await fetch('/api/gate/cameras/' + cam.id + '/start', { method: 'POST', credentials: 'same-origin' });
+                                const j = await r.json().catch(()=>({}));
+                                if (!r.ok) throw new Error(j.detail || j.message || 'Start failed');
+                                toggleBtnEl.innerHTML = '<i class="fas fa-stop-circle" style="color:#ef4444;"></i> <span>Stop</span>';
+                                toggleBtnEl.dataset.running = '1';
+                            } else {
+                                alert('No device or RTSP URL available for this camera.');
+                            }
+                        } catch (err) {
+                            alert('Start error: ' + (err.message || err));
+                        }
+                    });
+
+                    // AUTO-SYNC: If camera is active and it's a local device, start capture if not already running
+                    if (cam.active && cam.device_id && !activeClientCaptures[cam.id]) {
+                        startClientCapture(cam.id, cam.device_id).catch(e => console.warn('Auto-start failed', e));
+                    }
+
+                    removeBtnEl?.addEventListener('click', async () => {
+                        if (!confirm('Delete this camera?')) return;
+                        try {
+                            // ensure client capture stopped first
+                            stopClientCapture(cam.id);
+                            const r = await fetch('/api/gate/cameras/' + cam.id, { method: 'DELETE', credentials: 'same-origin' });
+                            const j = await r.json().catch(()=>({}));
+                            if (!r.ok) throw new Error(j.detail || j.message || 'Delete failed');
+                            alert('Camera removed');
+                            loadCameras();
+                        } catch (err) {
+                            alert('Remove error: ' + (err.message || err));
+                        }
+                    });
+
+                    // Set preview image preference: server-saved, live snapshot, client snapshot, fallback
+                    (async () => {
+                        const img = card.querySelector('.cam-thumb');
+                        try {
+                            const serverUrl = `/source/camera-preview/${cam.id}.png?ts=${Date.now()}`;
+                            const prevResp = await fetch(serverUrl, { credentials: 'same-origin', cache: 'no-store' });
+                            if (prevResp.ok) { const b = await prevResp.blob(); img.src = URL.createObjectURL(b); return; }
+                        } catch (e) {}
+                        if (cam.active) {
+                            try { const snapResp = await fetch(`/api/gate/cameras/${cam.id}/snapshot?ts=${Date.now()}`, { credentials: 'same-origin', cache: 'no-store' }); if (snapResp.ok) { const b = await snapResp.blob(); img.src = URL.createObjectURL(b); return; } } catch(e){}
+                        }
+                        if (cam.device_id && navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                            try { const dataUrl = await captureDeviceSnapshot(cam.device_id); if (dataUrl) img.src = dataUrl; return; } catch(e){}
+                        }
+                        img.src = '/source/camera-preview/preview.png';
+                    })();
+                }
+
+                // Add card for creating a new camera
+                const addCard = document.createElement('div');
+                addCard.className = 'camera-card add-camera-card';
+                addCard.innerHTML = '<div class="add-camera"><i class="fas fa-plus"></i><h2>Add Camera</h2></div>';
+                addCard.addEventListener('click', showAddForm);
+                container.appendChild(addCard);
+
+            } catch (err) {
+                container.innerHTML = '<div style="padding:12px">Error loading cameras</div>';
+                console.error(err);
+            }
+        }
+
+        async function showAddForm() {
+            const modal = document.getElementById('addCameraModal');
+            if (!modal) return alert('Add Camera modal not found');
+            // reset fields
+            const deviceSelect = modal.querySelector('#newCamDeviceSelect');
+            const previewCanvas = modal.querySelector('#previewCanvas');
+            const previewCtx = previewCanvas.getContext('2d');
+            const urlInput = modal.querySelector('#newCamUrl');
+            const locInput = modal.querySelector('#newCamLocation');
+            const posSelect = modal.querySelector('#newCamPosition');
+            modal._lastPreviewData = null;
+            modal._autoCapturedForDevice = null;
+            deviceSelect.innerHTML = '<option value="">-- Select camera device --</option>';
+            urlInput.value = '';
+            locInput.value = '';
+            posSelect.value = 'Entry';
+            previewCtx.clearRect(0,0,previewCanvas.width, previewCanvas.height);
+
+            // populate devices each time — request temporary permission first so labels are available
+            try {
+                let tempStream = null;
+                try {
+                    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                        // request permission to allow device labels to be populated
+                        tempStream = await navigator.mediaDevices.getUserMedia({ video: true });
+                    }
+                } catch (permErr) {
+                    // permission may be denied or not required; continue to enumerate
+                    console.warn('Camera permission request failed or was dismissed', permErr);
+                }
+
+                const devs = await enumerateVideoDevices();
+                devs.forEach((d, idx) => {
+                    const opt = document.createElement('option');
+                    opt.value = d.deviceId;
+                    // prefer friendly label, fallback to deviceId or generic name
+                    opt.textContent = d.label && d.label.trim().length ? `${d.label}` : (d.deviceId || `Camera ${idx+1}`);
+                    deviceSelect.appendChild(opt);
+                });
+
+                // stop temporary stream if we opened one
+                try { if (tempStream) tempStream.getTracks().forEach(t => t.stop()); } catch (stopErr) {}
+            } catch (e) {
+                console.warn('Failed to enumerate video devices', e);
+            }
+
+            // open modal
+            modal.style.display = 'block';
+
+            // attach handlers once
+            if (!modal.dataset.initialized) {
+                const closeBtn = modal.querySelector('#closeAddCameraBtn');
+                const captureBtn = modal.querySelector('#capturePreviewBtn');
+                const createBtn = modal.querySelector('#createCamBtn');
+                const cancelBtn = modal.querySelector('#cancelCamBtn');
+                const previewVideo = modal.querySelector('#previewVideo');
+
+                // helpers to start/stop live preview
+                modal.startPreview = async (deviceId) => {
+                    try {
+                        modal.stopPreview?.();
+                        if (!deviceId || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return;
+                        const s = await navigator.mediaDevices.getUserMedia({ video: { deviceId: { exact: deviceId } }, audio: false });
+                        // Keep the video element hidden; size it to the canvas so it doesn't appear large.
+                        try {
+                            previewVideo.style.display = 'none';
+                            previewVideo.width = previewCanvas.width || 220;
+                            previewVideo.height = previewCanvas.height || 140;
+                            previewVideo.srcObject = s;
+                            try { await previewVideo.play(); } catch(e) {}
+                        } catch (e) {
+                            console.warn('previewVideo adjustments failed', e);
+                        }
+                        modal._previewStream = s;
+                    } catch (e) { console.warn('startPreview failed', e); }
+                };
+
+                modal.stopPreview = () => {
+                    try {
+                        if (modal._previewStream) { modal._previewStream.getTracks().forEach(t=>t.stop()); modal._previewStream = null; }
+                    } catch (e) {}
+                    try { previewVideo.srcObject = null; previewVideo.style.display = 'none'; } catch (e) {}
+                };
+
+                // stop preview when closing
+                closeBtn?.addEventListener('click', () => { modal.stopPreview(); modal.style.display = 'none'; });
+                cancelBtn?.addEventListener('click', () => { modal.stopPreview(); modal.style.display = 'none'; });
+
+                // when selecting device, start live preview and auto-capture a snapshot
+                deviceSelect?.addEventListener('change', async (ev) => {
+                    const id = deviceSelect.value;
+                    if (!id) { modal.stopPreview(); modal._autoCapturedForDevice = null; return; }
+                    // guard: only auto-capture once per device selection
+                    if (modal._autoCapturedForDevice === id) return;
+                    modal._autoCapturedForDevice = id;
+                    try {
+                        await modal.startPreview(id);
+                        // give the video a short moment to render the first frame
+                        await new Promise(r => setTimeout(r, 350));
+                        // capture from live video if available
+                        try {
+                            if (previewVideo && previewVideo.videoWidth) {
+                                previewCtx.clearRect(0,0,previewCanvas.width, previewCanvas.height);
+                                previewCtx.drawImage(previewVideo, 0, 0, previewCanvas.width, previewCanvas.height);
+                                modal._lastPreviewData = previewCanvas.toDataURL('image/jpeg', 0.8);
+                                return;
+                            }
+                        } catch (_) {}
+                        // fallback to one-shot capture
+                        const dataUrl = await captureDeviceSnapshot(id);
+                        modal._lastPreviewData = dataUrl;
+                        const img = new Image();
+                        img.onload = () => { previewCtx.clearRect(0,0,previewCanvas.width, previewCanvas.height); previewCtx.drawImage(img, 0, 0, previewCanvas.width, previewCanvas.height); };
+                        img.src = dataUrl;
+                    } catch (e) {
+                        console.warn('Auto-capture failed', e);
+                        modal.stopPreview();
+                        modal._autoCapturedForDevice = null;
+                    }
+                });
+
+                // capture: if live preview is active capture from video, otherwise do a one-shot capture
+                captureBtn?.addEventListener('click', async () => {
+                    try {
+                        if (modal._previewStream && previewVideo && previewVideo.videoWidth) {
+                            previewCtx.clearRect(0,0,previewCanvas.width, previewCanvas.height);
+                            previewCtx.drawImage(previewVideo, 0, 0, previewCanvas.width, previewCanvas.height);
+                            modal._lastPreviewData = previewCanvas.toDataURL('image/jpeg', 0.8);
+                            return;
+                        }
+                        const deviceId = deviceSelect.value;
+                        if (!deviceId) return alert('Select a camera device first');
+                        const dataUrl = await captureDeviceSnapshot(deviceId);
+                        modal._lastPreviewData = dataUrl;
+                        const img = new Image();
+                        img.onload = () => { previewCtx.clearRect(0,0,previewCanvas.width, previewCanvas.height); previewCtx.drawImage(img, 0, 0, previewCanvas.width, previewCanvas.height); };
+                        img.src = dataUrl;
+                    } catch (err) {
+                        alert('Preview capture failed: ' + (err.message || err));
+                    }
+                });
+
+                createBtn?.addEventListener('click', async () => {
+                    const deviceId = deviceSelect.value || null;
+                    const name = (deviceSelect.selectedOptions && deviceSelect.selectedOptions.length) ? (deviceSelect.selectedOptions[0].textContent || 'Camera') : (urlInput.value.trim() || 'Camera');
+                    const rtsp = urlInput.value.trim() || null;
+                    const location = locInput.value.trim() || null;
+                    const position = posSelect.value || null;
+                    try {
+                        const res = await fetch('/api/gate/cameras', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ name, rtsp_url: rtsp, device_id: deviceId, location, position, active: false }),
+                            credentials: 'same-origin'
+                        });
+                        const j = await res.json().catch(()=>({}));
+                        if (!res.ok) throw new Error(j.detail || j.message || 'Create failed');
+                        const createdId = j.id;
+
+                        // If we captured a preview in the modal, upload it to the server so it is persisted
+                        if (modal._lastPreviewData && createdId) {
+                            try {
+                                const blob = await (await fetch(modal._lastPreviewData)).blob();
+                                const fd = new FormData();
+                                fd.append('file', blob, 'preview.jpg');
+                                const up = await fetch(`/api/gate/cameras/${createdId}/preview`, { method: 'POST', body: fd, credentials: 'same-origin' });
+                                if (!up.ok) console.warn('Preview upload failed', await up.text().catch(()=>{}));
+                            } catch (e) {
+                                console.warn('Uploading preview failed', e);
+                            }
+                        }
+
+                        alert('Camera created');
+                        modal.stopPreview();
+                        modal.style.display = 'none';
+                        await loadCameras();
+
+                    } catch (err) {
+                        alert('Create error: ' + err.message);
+                    }
+                });
+
+                modal.dataset.initialized = '1';
+            }
+        }
+
+        // Gate logs management
+        let logsCache =[];
+        let logsSortAsc = false;
+        const GATE_LOGS_POLL_MS = 5000;
+        let _gateLogsPollInterval = null;
+
+        async function loadGateLogs() {
+            const tableBody = document.querySelector('#gate-logs-table tbody');
+            const searchInput = document.getElementById('logsSearch');
+            if (!tableBody) return;
+            try {
+                // Prefer aggregated gate_daily endpoint which returns per-date rows.
+                const res = await fetch('/api/gate-logs', { credentials: 'same-origin' });
+                if (!res.ok) throw new Error('Failed to load logs');
+                const data = await res.json();
+                // Support two possible response shapes:
+                // - { total_logs: N, logs: [...] } (gate_security)
+                // - [...] array (admin.py /api/gate-logs)
+                if (Array.isArray(data)) logsCache = data;
+                else logsCache = data.logs || data ||[];
+                renderLogs();
+            } catch (e) {
+                console.error('Load logs error', e);
+                tableBody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:12px; color:#6b7280;">Failed to load logs</td></tr>';
+            }
+        }
+
+        function renderLogs() {
+            const tableBody = document.querySelector('#gate-logs-table tbody');
+            const searchInput = document.getElementById('logsSearch');
+            if (!tableBody) return;
+            const q = (searchInput && searchInput.value || '').toLowerCase().trim();
+
+            let rows = logsCache.slice();
+            rows = rows.sort((a,b) => {
+                const taSrc = a.timestamp || a.logged_at || a.date || a.check_in || null;
+                const tbSrc = b.timestamp || b.logged_at || b.date || b.check_in || null;
+                const ta = taSrc ? new Date(taSrc).getTime() : 0;
+                const tb = tbSrc ? new Date(tbSrc).getTime() : 0;
+                return logsSortAsc ? ta - tb : tb - ta;
+            });
+
+            if (q) {
+                rows = rows.filter(r => {
+                    const name = ((r.first_name||'') + ' ' + (r.last_name||'')).toLowerCase();
+                    return name.includes(q) || (String(r.student_id||'')).includes(q);
+                });
+            }
+
+            tableBody.innerHTML = '';
+            if (!rows.length) {
+                tableBody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:12px; color:#6b7280;">No logs found</td></tr>';
+                return;
+            }
+
+            rows.forEach(r => {
+                const tr = document.createElement('tr');
+                // Date value: prefer gd.date, fall back to check_in date
+                const dateVal = r.date || r.check_in || null;
+                const dateStr = dateVal ? new Date(dateVal).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—';
+                const checkIn = r.check_in ? new Date(r.check_in).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '—';
+                const checkOut = r.check_out ? new Date(r.check_out).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '—';
+                const uniform = r.has_uniform ? 'Yes' : 'No';
+                const idcard = r.has_id_card ? 'Yes' : 'No';
+
+                const studentId = r.student_id || r.id || '—';
+                const fullName = (((r.first_name||'') + ' ' + (r.last_name||'')).trim()) || r.name || '—';
+                tr.innerHTML = `
+                <td>${dateStr}</td>
+                <td>${studentId}</td>
+                <td>${fullName}</td>
+                <td>${checkIn}</td>
+                <td>${checkOut}</td>
+                <td>${uniform}</td>
+                <td>${idcard}</td>
+            `;
+                tableBody.appendChild(tr);
+            });
+        }
+
+        function startGateLogsPolling() {
+            if (_gateLogsPollInterval) return;
+            // immediate load
+            loadGateLogs();
+            _gateLogsPollInterval = setInterval(() => {
+                if (location.hash === '#gate-logs') {
+                    loadGateLogs();
+                } else {
+                    stopGateLogsPolling();
+                }
+            }, GATE_LOGS_POLL_MS);
+        }
+
+        function stopGateLogsPolling() {
+            if (_gateLogsPollInterval) {
+                clearInterval(_gateLogsPollInterval);
+                _gateLogsPollInterval = null;
+            }
+        }
+
+        // start polling when Gate Logs is opened (nav click or hashchange)
+        document.querySelector('a[href="#gate-logs"]')?.addEventListener('click', () => {
+            // small delay so hash is updated and UI toggles
+            setTimeout(() => startGateLogsPolling(), 100);
+        });
+        window.addEventListener('hashchange', () => {
+            if (location.hash === '#gate-logs') startGateLogsPolling();
+            else stopGateLogsPolling();
+        });
+
+        // allow manual refresh and searching
+        document.getElementById('logsSearch')?.addEventListener('input', () => renderLogs());
+        document.getElementById('refreshLogs')?.addEventListener('click', () => loadGateLogs());
+        document.querySelector('#gate-logs-table thead th[data-key="timestamp"]')?.addEventListener('click', () => { logsSortAsc = !logsSortAsc; renderLogs(); });
+        // allow page-show.js to call this
+        window.loadGateLogs = loadGateLogs;
+
+        // if page loaded with #gate-logs open, start polling immediately
+        if (location.hash === '#gate-logs') startGateLogsPolling();
+
+    })();
+</script>
+<div class="add-account" id="add-account" style="display: none">
+    <div class="add-account-overlay" id="addAccountOverlay">
+        <div class="add-account-modal">
+
+            <!-- ── Header ── -->
+            <div class="aa-header">
+                <div class="aa-header-left">
+                    <div class="aa-header-icon"><i class="fas fa-user-plus"></i></div>
+                    <div>
+                        <h3>Create Account</h3>
+                        <span>A temporary password will be sent to their email</span>
+                    </div>
+                </div>
+                <button class="aa-close" id="closeAddAccount">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <!-- ── Role selector tabs ── -->
+            <div class="aa-role-tabs">
+                <button class="aa-role-tab active" data-role="instructor">
+                    <i class="fas fa-chalkboard-teacher"></i>
+                    <span>Instructor</span>
+                </button>
+                <button class="aa-role-tab" data-role="admin">
+                    <i class="fas fa-user-shield"></i>
+                    <span>Admin</span>
+                </button>
+            </div>
+
+            <!-- ── Body ── -->
+            <div class="aa-body">
+
+                <!-- Temp password notice -->
+                <div class="aa-temp-pass-notice">
+                    <div class="aa-notice-icon"><i class="fas fa-paper-plane"></i></div>
+                    <div class="aa-notice-text">
+                        <strong>Temporary password will be auto-generated</strong>
+                        <span>The system will email them a one-time password. They must complete their profile and change it on first login.</span>
+                    </div>
+                </div>
+
+                <!-- Email only -->
+                <div class="aa-grid" style="margin-top:20px;">
+                    <div class="aa-field aa-field-full">
+                        <label class="aa-label">Email Address <span class="aa-required">*</span></label>
+                        <input type="email" id="aaEmail" class="aa-input" placeholder="yourname@insight.edu.ph" autocomplete="off">
+                    </div>
+                </div>
+
+                <!-- Error / success message -->
+                <div class="aa-message" id="aaMessage" style="display:none;"></div>
+            </div>
+
+            <!-- ── Footer ── -->
+            <div class="aa-footer">
+                <button class="aa-btn-cancel" id="aaCancel">
+                    <i class="fas fa-times"></i> Cancel
+                </button>
+                <button class="aa-btn-submit" id="aaSubmit">
+                    <i class="fas fa-paper-plane"></i>
+                    <span>Create &amp; Send Invite</span>
+                </button>
+            </div>
+
+        </div>
+    </div>
+</div>
+<div class="add-account" id="add-dept-modal" style="display: none">
+    <div class="add-account-overlay" id="addDeptOverlay">
+        <div class="add-account-modal">
+            <div class="aa-header">
+                <div class="aa-header-left">
+                    <div class="aa-header-icon"><i class="fas fa-building"></i></div>
+                    <div>
+                        <h3>Add Department</h3>
+                        <span>Add a new academic department</span>
+                    </div>
+                </div>
+                <button class="aa-close" id="closeAddDept">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="aa-body">
+                <div class="aa-grid" style="margin-top:20px;">
+                    <div class="aa-field aa-field-full">
+                        <label class="aa-label">Department Code <span class="aa-required">*</span></label>
+                        <input type="text" id="deptCode" class="aa-input" placeholder="e.g. BSCS" autocomplete="off">
+                    </div>
+                    <div class="aa-field aa-field-full" style="margin-top:15px;">
+                        <label class="aa-label">Department Name <span class="aa-required">*</span></label>
+                        <input type="text" id="deptName" class="aa-input" placeholder="e.g. Bachelor of Science in Computer Science" autocomplete="off">
+                    </div>
+                </div>
+                <div class="aa-message" id="deptMessage" style="display:none;"></div>
+            </div>
+            <div class="aa-footer">
+                <button class="aa-btn-cancel" id="deptCancel">
+                    <i class="fas fa-times"></i> Cancel
+                </button>
+                <button class="aa-btn-submit" id="deptSubmit">
+                    <i class="fas fa-plus"></i>
+                    <span>Add Department</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="camera-modal" id="cameraModal" style="display:none;">
+    <div class="scanner-wrap">
+        <div class="sc-header">
+            <div class="sc-header-left">
+                <i class="fas fa-camera-retro sc-icon"></i>
+                <div class="sc-header-text">
+                    <h3 id="scSubjectLabel">Attendance Scanner</h3>
+                    <span id="scSessionLabel">Ready to scan</span>
+                </div>
+            </div>
+            <button class="sc-close" id="closeScannerModal">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="camera-row">
+            <div class="half-row">
+                <div class="">
+                    <div class="sc-mode-bar">
+                        <div class="sc-mode-group">
+                            <button class="sc-mode-btn active" data-mode="qr"><i class="fas fa-qrcode"></i> QR Code</button>
+                            <button class="sc-mode-btn" data-mode="face"><i class="fas fa-user-circle"></i> Face ID</button>
+                        </div>
+                        <div class="sc-status-pill" id="scStatusPill">
+                            <div class="sc-dot" id="scDot"></div>
+                            <span id="scStatusText">Camera Off</span>
+                        </div>
+                    </div>
+                    <div class="sc-viewport-wrap">
+                        <div class="sc-viewport" id="scViewport">
+                            <div class="sc-idle" id="scIdle">
+                                <div class="sc-idle-ring"><i class="fas fa-camera"></i></div>
+                                <p>Camera is off.<br>Press <strong>Start Camera</strong> to begin.</p>
+                            </div>
+                            <video id="scVideo" autoplay playsinline muted></video>
+                            <canvas id="scVideoOverlay" style="position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:5;"></canvas>
+                            <div class="sc-qr-overlay" id="scQROverlay" style="display:none;">
+                                <span class="qr-hint">Align QR code within the frame</span>
+                                <div class="qr-c tl"></div><div class="qr-c tr"></div><div class="qr-c bl"></div><div class="qr-c br"></div>
+                                <div class="qr-line" id="qrLine"></div>
+                            </div>
+                            <div class="sc-face-overlay" id="scFaceOverlay" style="display:none;">
+                                <span class="face-hint">Position face inside the circle</span>
+                                <div class="face-ring"><div class="face-ring-inner"></div></div>
+                            </div>
+                        </div>
+                        <div class="sc-last-scan" id="scLastScan" style="display:none;">
+                            <div class="lscan-avatar"><i class="fas fa-user-check"></i></div>
+                            <div class="lscan-info">
+                                <span class="lscan-name" id="lscanName">—</span>
+                                <span class="lscan-status" id="lscanStatus">—</span>
+                            </div>
+                            <span class="lscan-time" id="lscanTime">—</span>
+                        </div>
+                    </div>
+                    <div class="sc-controls">
+                        <button class="sc-btn start" id="scStartBtn"><i class="fas fa-play"></i> Start Camera</button>
+                        <button class="sc-btn stop" id="scStopBtn" style="display:none;"><i class="fas fa-stop"></i> Stop Camera</button>
+                        <div class="sc-counters">
+                            <div class="sc-count present"><i class="fas fa-user-check"></i><span id="scPresent">0</span><small>Attended</small></div>
+                            <div class="sc-count-div"></div>
+                            <div class="sc-count total"><i class="fas fa-users"></i><span id="scTotal">0</span><small>Total</small></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="half-row">
+                <div class="sc-log">
+                    <div class="sc-log-hd"><span><i class="fas fa-list-ul"></i> Scan Log</span><button class="sc-log-clear" id="scLogClear">Clear</button></div>
+                    <div class="sc-log-body" id="scLogBody"><p class="sc-log-empty">No scans yet.</p></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="/js/add-account.js"></script>
+<script src="/js/logout.js"></script>
+<script src="/js/page-show.js"></script>
+<script src="/js/chart.js"></script>
+<script src="/js/password-toggle.js"></script>
+<script src="/js/chart-admin.js" defer></script>
+
+</body>
+</html>

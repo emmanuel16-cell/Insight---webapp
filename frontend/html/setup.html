@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>InSight – Setup</title>
+    <link rel="icon" type="image/png" href="../src/img/LOGO.png">
+    <link rel="shortcut icon" type="image/x-icon" href="../src/img/LOGO.png">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      background: linear-gradient(135deg, #011f2e 0%, #023047 40%, #1a6a87 75%, #219ebc 100%);
+      padding: 1.5rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Decorative background blobs */
+    body::before {
+      content: '';
+      position: fixed;
+      width: 700px; height: 700px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(255,255,255,.06) 0%, transparent 70%);
+      top: -250px; left: -200px;
+      pointer-events: none;
+    }
+    body::after {
+      content: '';
+      position: fixed;
+      width: 500px; height: 500px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(255,255,255,.05) 0%, transparent 70%);
+      bottom: -150px; right: -120px;
+      pointer-events: none;
+    }
+
+    /* ── Card ── */
+    .card {
+      background: #fff;
+      border-radius: 24px;
+      padding: 3rem 2.75rem;
+      width: 100%;
+      max-width: 490px;
+      box-shadow:
+        0 40px 80px rgba(1,31,46,.4),
+        0 0 0 1px rgba(255,255,255,.08);
+      position: relative;
+      z-index: 1;
+    }
+
+    /* ── Step dots ── */
+    .steps {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 2.5rem;
+    }
+    .dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: #e5e7eb;
+      transition: all .35s cubic-bezier(.4,0,.2,1);
+    }
+    .dot.active { background: #219ebc; width: 26px; border-radius: 4px; }
+    .dot.done   { background: #023047; }
+
+    /* ── Screen management ── */
+    .screen { display: none; }
+    .screen.active {
+      display: block;
+      animation: rise .38s cubic-bezier(.4,0,.2,1);
+    }
+    @keyframes rise {
+      from { opacity: 0; transform: translateY(18px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ──────────────────────────────
+       SCREEN 1 – WELCOME
+    ────────────────────────────── */
+    .logo-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-bottom: 2rem;
+    }
+    .logo-box {
+      width: 90px; height: 90px;
+      background: linear-gradient(135deg, #023047 0%, #219ebc 100%);
+      border-radius: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 1.125rem;
+      box-shadow: 0 14px 28px rgba(33,158,188,.38);
+    }
+    .logo-box svg { width: 50px; height: 50px; }
+    .brand { font-size: 2.375rem; font-weight: 900; color: #023047; letter-spacing: -1px; }
+    .tagline {
+      font-size: .875rem; color: #6b7280; margin-top: 5px;
+      text-align: center; line-height: 1.4;
+    }
+
+    .features {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-bottom: 2.5rem;
+    }
+    .feat {
+      background: #f0f9ff;
+      border: 1.5px solid #e0f2fe;
+      border-radius: 14px;
+      padding: .875rem .5rem;
+      text-align: center;
+      transition: border-color .2s, box-shadow .2s;
+    }
+    .feat:hover { border-color: #219ebc; box-shadow: 0 4px 12px rgba(33,158,188,.12); }
+    .feat-icon { font-size: 1.5rem; display: block; margin-bottom: .3rem; }
+    .feat-label { font-size: .7rem; font-weight: 600; color: #023047; line-height: 1.3; }
+
+    /* ──────────────────────────────
+       SHARED BUTTON STYLES
+    ────────────────────────────── */
+    .btn {
+      width: 100%;
+      padding: .9375rem 1.5rem;
+      border: none;
+      border-radius: 14px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: .5rem;
+      transition: transform .15s, box-shadow .2s, opacity .15s;
+    }
+    .btn:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 24px rgba(33,158,188,.28);
+    }
+    .btn:active:not(:disabled) { transform: translateY(0); }
+    .btn:disabled { opacity: .6; cursor: not-allowed; }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #023047 0%, #219ebc 100%);
+      color: #fff;
+    }
+    .btn-ghost {
+      background: transparent;
+      color: #6b7280;
+      font-size: .875rem;
+      font-weight: 500;
+      padding: .6875rem;
+      margin-top: .625rem;
+      box-shadow: none !important;
+      transform: none !important;
+    }
+    .btn-ghost:hover:not(:disabled) { color: #023047; }
+
+    /* ──────────────────────────────
+       SCREEN 2 – CREATE ADMIN
+    ────────────────────────────── */
+    .form-head { margin-bottom: 1.75rem; }
+    .form-head h2 { font-size: 1.625rem; font-weight: 800; color: #023047; margin-bottom: .25rem; }
+    .form-head p  { font-size: .875rem; color: #6b7280; line-height: 1.5; }
+
+    .field { margin-bottom: 1.25rem; }
+    .field label {
+      display: block;
+      font-size: .8125rem;
+      font-weight: 600;
+      color: #374151;
+      margin-bottom: .375rem;
+    }
+    .field label span { color: #9ca3af; font-weight: 400; }
+
+    .inp-wrap { position: relative; }
+    .inp-wrap input {
+      width: 100%;
+      padding: .8125rem 3rem .8125rem 1rem;
+      border: 2px solid #e5e7eb;
+      border-radius: 12px;
+      font-size: .9375rem;
+      color: #111827;
+      background: #fff;
+      transition: border-color .2s, box-shadow .2s;
+      outline: none;
+    }
+    .inp-wrap input:focus {
+      border-color: #219ebc;
+      box-shadow: 0 0 0 3px rgba(33,158,188,.13);
+    }
+    .inp-wrap input.err { border-color: #ef4444; }
+    .inp-wrap input.ok  { border-color: #22c55e; }
+
+    .eye-btn {
+      position: absolute;
+      right: .875rem; top: 50%;
+      transform: translateY(-50%);
+      background: none; border: none;
+      cursor: pointer; color: #9ca3af;
+      display: flex; align-items: center;
+      padding: 4px;
+      transition: color .2s;
+    }
+    .eye-btn:hover { color: #374151; }
+
+    /* Password strength */
+    .pw-strength { margin-top: 6px; }
+    .strength-track { height: 4px; background: #e5e7eb; border-radius: 4px; overflow: hidden; }
+    .strength-fill  { height: 100%; width: 0; border-radius: 4px; transition: width .3s, background .3s; }
+    .strength-label { font-size: .75rem; margin-top: 4px; transition: color .3s; color: #9ca3af; min-height: 1rem; }
+
+    /* Alert */
+    .alert {
+      padding: .75rem 1rem;
+      border-radius: 10px;
+      font-size: .875rem;
+      font-weight: 500;
+      margin-bottom: 1.25rem;
+      display: none;
+      align-items: center;
+      gap: .5rem;
+      line-height: 1.4;
+    }
+    .alert.error { display: flex; background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; }
+    .alert.info  { display: flex; background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
+
+    /* Submit button spinner */
+    .spin {
+      width: 18px; height: 18px;
+      border: 2px solid rgba(255,255,255,.35);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: rot .6s linear infinite;
+      display: none;
+      flex-shrink: 0;
+    }
+    @keyframes rot { to { transform: rotate(360deg); } }
+
+    /* ──────────────────────────────
+       SCREEN 3 – SUCCESS
+    ────────────────────────────── */
+    .success-ring {
+      width: 82px; height: 82px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #15803d, #4ade80);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 2.25rem;
+      margin: 0 auto 1.625rem;
+      box-shadow: 0 12px 28px rgba(21,128,61,.32);
+      animation: pop .45s cubic-bezier(.175,.885,.32,1.275);
+    }
+    @keyframes pop {
+      from { transform: scale(0) rotate(-20deg); opacity: 0; }
+      to   { transform: scale(1) rotate(0); opacity: 1; }
+    }
+    .success-title {
+      font-size: 1.625rem; font-weight: 800; color: #023047;
+      text-align: center; margin-bottom: .5rem;
+    }
+    .success-sub {
+      font-size: .9rem; color: #6b7280;
+      text-align: center; line-height: 1.65; margin-bottom: 2rem;
+    }
+    .redirect-track { height: 3px; background: #e5e7eb; border-radius: 3px; margin-bottom: .5rem; overflow: hidden; }
+    .redirect-fill  { height: 100%; background: linear-gradient(90deg, #023047, #219ebc); width: 0; }
+    .redirect-hint  { font-size: .8rem; color: #9ca3af; text-align: center; margin-bottom: 1.75rem; }
+
+    /* ── Responsive ── */
+    @media (max-width: 520px) {
+      .card { padding: 2rem 1.5rem; }
+      .brand { font-size: 1.875rem; }
+      .features { grid-template-columns: 1fr 1fr; }
+      .features .feat:nth-child(5),
+      .features .feat:nth-child(6) { grid-column: auto; }
+    }
+    @media (max-width: 380px) {
+      .features { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="card">
+
+  <!-- Step indicator -->
+  <div class="steps">
+    <div class="dot active" id="d1"></div>
+    <div class="dot" id="d2"></div>
+    <div class="dot" id="d3"></div>
+  </div>
+
+  <!-- ════════════════════════════════
+       SCREEN 1 — WELCOME
+  ════════════════════════════════ -->
+  <div class="screen active" id="s-welcome">
+
+    <div class="logo-wrap">
+      <div class="logo-box">
+          <img style="width: 70px; height: 70px;" src="/src/img/LOGO.png">
+      </div>
+      <span class="brand">InSight</span>
+      <span class="tagline">AI-Powered Attendance &amp; Gate Security System</span>
+    </div>
+
+    <div class="features">
+      <div class="feat">
+        <span class="feat-icon">👁️</span>
+        <span class="feat-label">Face Recognition</span>
+      </div>
+      <div class="feat">
+        <span class="feat-icon">📋</span>
+        <span class="feat-label">Attendance Tracking</span>
+      </div>
+      <div class="feat">
+        <span class="feat-icon">🔒</span>
+        <span class="feat-label">Gate Security</span>
+      </div>
+      <div class="feat">
+        <span class="feat-icon">📱</span>
+        <span class="feat-label">QR Code Scan</span>
+      </div>
+      <div class="feat">
+        <span class="feat-icon">📊</span>
+        <span class="feat-label">Analytics</span>
+      </div>
+      <div class="feat">
+        <span class="feat-icon">🎓</span>
+        <span class="feat-label">Multi-Subject</span>
+      </div>
+    </div>
+
+    <button class="btn btn-primary" onclick="toForm()">
+      Let's Get Started
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+           stroke="currentColor" stroke-width="2.5"
+           stroke-linecap="round" stroke-linejoin="round">
+        <path d="M5 12h14M12 5l7 7-7 7"/>
+      </svg>
+    </button>
+
+  </div><!-- /s-welcome -->
+
+
+  <!-- ════════════════════════════════
+       SCREEN 2 — CREATE ADMIN
+  ════════════════════════════════ -->
+  <div class="screen" id="s-form">
+
+    <div class="form-head">
+      <h2>Create Admin Account</h2>
+      <p>Set up your system administrator to unlock all InSight features.</p>
+    </div>
+
+    <div class="alert" id="alert-box"></div>
+
+    <form id="admin-form" onsubmit="handleSubmit(event)" novalidate>
+
+      <div class="field">
+        <label for="inp-email">Email Address</label>
+        <div class="inp-wrap">
+          <input type="email" id="inp-email"
+                 placeholder="admin@yourschool.edu"
+                 autocomplete="email"
+                 required />
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="inp-pw">
+          Password
+          <span>(min. 8 characters)</span>
+        </label>
+        <div class="inp-wrap">
+          <input type="password" id="inp-pw"
+                 placeholder="Create a strong password"
+                 autocomplete="new-password"
+                 oninput="updateStrength(this.value)"
+                 required />
+          <button type="button" class="eye-btn" onclick="toggleVis('inp-pw')" title="Show / hide password">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="2"
+                 stroke-linecap="round" stroke-linejoin="round">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+              <circle cx="12" cy="12" r="3"/>
+            </svg>
+          </button>
+        </div>
+        <div class="pw-strength">
+          <div class="strength-track"><div class="strength-fill" id="s-fill"></div></div>
+          <div class="strength-label" id="s-label"></div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="inp-cpw">Confirm Password</label>
+        <div class="inp-wrap">
+          <input type="password" id="inp-cpw"
+                 placeholder="Repeat your password"
+                 autocomplete="new-password"
+                 required />
+          <button type="button" class="eye-btn" onclick="toggleVis('inp-cpw')" title="Show / hide password">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="2"
+                 stroke-linecap="round" stroke-linejoin="round">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+              <circle cx="12" cy="12" r="3"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <button class="btn btn-primary" type="submit" id="submit-btn">
+        <span id="submit-label">Create Admin Account</span>
+        <div class="spin" id="submit-spin"></div>
+      </button>
+
+    </form>
+
+    <button class="btn btn-ghost" onclick="toWelcome()">← Back to Welcome</button>
+
+  </div><!-- /s-form -->
+
+
+  <!-- ════════════════════════════════
+       SCREEN 3 — SUCCESS
+  ════════════════════════════════ -->
+  <div class="screen" id="s-success">
+
+    <div class="success-ring">✓</div>
+    <div class="success-title">Setup Complete!</div>
+    <p class="success-sub">
+      Your administrator account has been created.<br>
+      You can now log in and start managing InSight.
+    </p>
+
+    <div class="redirect-track">
+      <div class="redirect-fill" id="r-fill"></div>
+    </div>
+    <div class="redirect-hint" id="r-hint">Redirecting to login in 3 seconds…</div>
+
+    <button class="btn btn-primary" onclick="location.href='/login'">
+      Go to Login
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+           stroke="currentColor" stroke-width="2.5"
+           stroke-linecap="round" stroke-linejoin="round">
+        <path d="M5 12h14M12 5l7 7-7 7"/>
+      </svg>
+    </button>
+
+  </div><!-- /s-success -->
+
+</div><!-- /card -->
+
+
+<script>
+/* ── Utilities ─────────────────────────────────────────── */
+const $  = id => document.getElementById(id);
+const el = q  => document.querySelector(q);
+
+function setDots(active) {               // active = 1 | 2 | 3
+  ['d1','d2','d3'].forEach((id, i) => {
+    const d = $(id);
+    d.className = 'dot' +
+      (i < active - 1 ? ' done' : i === active - 1 ? ' active' : '');
+  });
+}
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  $(id).classList.add('active');
+}
+
+function clearAlert() {
+  const a = $('alert-box');
+  a.className = 'alert';
+  a.textContent = '';
+}
+
+function showAlert(msg, type = 'error') {
+  const a = $('alert-box');
+  a.className  = 'alert ' + type;
+  a.innerHTML  = (type === 'error' ? '⚠️ ' : 'ℹ️ ') + msg;
+}
+
+function setLoading(on) {
+  $('submit-btn').disabled       = on;
+  $('submit-label').textContent  = on ? 'Creating…' : 'Create Admin Account';
+  $('submit-spin').style.display = on ? 'block' : 'none';
+}
+
+/* ── Screen transitions ─────────────────────────────────── */
+function toForm() {
+  clearAlert();
+  showScreen('s-form');
+  setDots(2);
+  $('inp-email').focus();
+}
+
+function toWelcome() {
+  showScreen('s-welcome');
+  setDots(1);
+}
+
+/* ── Password visibility toggle ─────────────────────────── */
+function toggleVis(inputId) {
+  const inp = $(inputId);
+  inp.type = inp.type === 'password' ? 'text' : 'password';
+}
+
+/* ── Password strength meter ────────────────────────────── */
+function updateStrength(pw) {
+  const fill  = $('s-fill');
+  const label = $('s-label');
+
+  if (!pw) {
+    fill.style.width = '0';
+    label.textContent = '';
+    return;
+  }
+
+  let score = 0;
+  if (pw.length >= 8)                            score++;
+  if (pw.length >= 12)                           score++;
+  if (/[A-Z]/.test(pw) && /[a-z]/.test(pw))     score++;
+  if (/[0-9]/.test(pw))                          score++;
+  if (/[^A-Za-z0-9]/.test(pw))                  score++;
+
+  const level = Math.min(3, Math.floor(score * 0.75));
+  const cfg = [
+    { w: '22%',  c: '#ef4444', t: 'Weak'   },
+    { w: '50%',  c: '#f97316', t: 'Fair'   },
+    { w: '75%',  c: '#eab308', t: 'Good'   },
+    { w: '100%', c: '#22c55e', t: 'Strong' },
+  ][level];
+
+  fill.style.width      = cfg.w;
+  fill.style.background = cfg.c;
+  label.style.color     = cfg.c;
+  label.textContent     = cfg.t;
+}
+
+/* ── Form submission ────────────────────────────────────── */
+async function handleSubmit(e) {
+  e.preventDefault();
+  clearAlert();
+
+  const email = $('inp-email').value.trim();
+  const pw    = $('inp-pw').value;
+  const cpw   = $('inp-cpw').value;
+
+  // Client-side validation
+  if (!email || !email.includes('@') || !email.includes('.')) {
+    showAlert('Please enter a valid email address.');
+    $('inp-email').focus();
+    return;
+  }
+  if (pw.length < 8) {
+    showAlert('Password must be at least 8 characters.');
+    $('inp-pw').focus();
+    return;
+  }
+  if (pw !== cpw) {
+    showAlert('Passwords do not match. Please try again.');
+    $('inp-cpw').focus();
+    return;
+  }
+
+  setLoading(true);
+
+  try {
+    const res  = await fetch('/api/system/create-first-admin', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ email, password: pw }),
+    });
+    const data = await res.json();
+
+    if (!res.ok) {
+      showAlert(data.detail || 'Something went wrong. Please try again.');
+      setLoading(false);
+      return;
+    }
+
+    /* ── Success ── */
+    showScreen('s-success');
+    setDots(3);
+    startRedirectCountdown();
+
+  } catch {
+    showAlert('Network error. Check your connection and try again.');
+    setLoading(false);
+  }
+}
+
+/* ── Countdown + progress bar after success ─────────────── */
+function startRedirectCountdown() {
+  const fill  = $('r-fill');
+  const hint  = $('r-hint');
+  let   secs  = 3;
+  let   start = null;
+  const total = secs * 1000;
+
+  function frame(ts) {
+    if (!start) start = ts;
+    const elapsed = ts - start;
+    const pct     = Math.min((elapsed / total) * 100, 100);
+    fill.style.width      = pct + '%';
+    fill.style.transition = 'none';
+
+    const remaining = Math.max(0, Math.ceil((total - elapsed) / 1000));
+    hint.textContent = `Redirecting to login in ${remaining} second${remaining !== 1 ? 's' : ''}…`;
+
+    if (elapsed < total) {
+      requestAnimationFrame(frame);
+    } else {
+      location.href = '/login';
+    }
+  }
+  requestAnimationFrame(frame);
+}
+
+/* ── On page load: verify setup is actually needed ──────── */
+(async () => {
+  try {
+    const res  = await fetch('/api/system/setup-status');
+    const data = await res.json();
+    if (data.admin_exists) {
+      location.href = '/login';
+    }
+  } catch (_) {
+    // network error or tables not ready yet — stay on page
+  }
+})();
+</script>
+</body>
+</html>
